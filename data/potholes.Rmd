@@ -9,15 +9,17 @@ output:
 ```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
 library(stringr)
 library(lubridate)
+library(rgdal)
 library(dplyr)
 library(ggplot2)
 library(scales)
 library(ggmap)
-library(leaflet)
 
 # Read csv.
 potholes <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL) %>%
   mutate(DATE.CLOSED.R = mdy(CLOSED_DT))
+
+BOSTON <- fortify(readOGR(dsn='downloaded', layer='BOSTON'))
 ```
 
 The following analysis is not meant for public consumption, at least not at the moment.
@@ -73,8 +75,8 @@ ggplot(data, aes(n)) +
 ```
 
 ***
-#### What areas saw the most number of closures in 2014?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+#### What areas saw the most number of yearly closures?
+```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
 
 minClosures <- 15
 
@@ -82,53 +84,100 @@ data <- potholes %>%
   filter(
     LATITUDE!=42.3594, LONGITUDE!=-71.0587,
     LATITUDE!=42.3601, LONGITUDE!=-71.0579,
-    year(DATE.CLOSED.R) == 2014,
     !is.na(DATE.CLOSED.R),
     !is.na(LATITUDE),
     !is.na(LONGITUDE)
     ) %>%
-  group_by(LATITUDE, LONGITUDE) %>%
+  mutate(
+    YEAR = year(DATE.CLOSED.R),
+    DISTRICT2 = pwd_district == 2
+  ) %>%
+  group_by(YEAR, LATITUDE, LONGITUDE, DISTRICT2) %>%
   tally() %>%
   ungroup() %>%
-  filter(n >= minClosures)
+  filter(n >= minClosures) %>%
+  arrange(desc(n))
 
-map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
+map <- get_map(location=c(min(BOSTON$long), min(BOSTON$lat), max(BOSTON$long), max(BOSTON$lat)), zoom=11)
 
 ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour='red'), data=data) +
+  geom_polygon(aes(x=long, y=lat, group=group), data=BOSTON, fill='grey', size=0.5, color='black', alpha=0) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour=DISTRICT2), data=data) +
   geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
   scale_size_continuous(range = c(4,20)) +
-  ggtitle(str_c(nrow(data), ' areas with at least ', minClosures, ' closures in 2014'))
+  ggtitle(str_c('Areas with at least ', minClosures, ' yearly closures')) +
+  facet_grid(YEAR ~ .)
 ```
 
+***
+#### Can we zoom in on District 2?
+```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+
+map <- get_map(location=c(-71.1153, 42.29), zoom=13)
+  
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour=DISTRICT2), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  scale_size_continuous(range = c(4,20)) +
+  ggtitle(str_c('Areas with at least ', minClosures, ' yearly closures')) +
+  facet_grid(YEAR ~ .)
+```
 
 ***
-#### What areas saw the most number of daily closures in 2014?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
-
-minClosures <- 15
+#### What areas saw the most number of daily closures?
+```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
 
 data <- potholes %>%
   filter(
     LATITUDE!=42.3594, LONGITUDE!=-71.0587,
     LATITUDE!=42.3601, LONGITUDE!=-71.0579,
-    year(DATE.CLOSED.R) == 2014,
     !is.na(DATE.CLOSED.R),
     !is.na(LATITUDE),
     !is.na(LONGITUDE)
     ) %>%
-  group_by(DATE.CLOSED.R, LATITUDE, LONGITUDE) %>%
+  mutate(DISTRICT2 = pwd_district == 2) %>%
+  group_by(DATE.CLOSED.R, LATITUDE, LONGITUDE, DISTRICT2) %>%
   tally() %>%
   ungroup() %>%
-  filter(n >= minClosures)
+  mutate(YEAR = year(DATE.CLOSED.R)) %>%
+  filter(n >= minClosures) %>%
+  arrange(desc(n))
 
-map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
+map <- get_map(location=c(min(BOSTON$long), min(BOSTON$lat), max(BOSTON$long), max(BOSTON$lat)), zoom=11)
 
 ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour='red'), data=data) +
+  geom_polygon(aes(x=long, y=lat, group=group), data=BOSTON, fill='grey', size=0.5, color='black', alpha=0) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour=DISTRICT2), data=data) +
   geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
   scale_size_continuous(range = c(4,20)) +
-  ggtitle(str_c(nrow(data), ' areas with at least ', minClosures, ' daily closures in 2014'))
+  ggtitle(str_c('Areas with at least ', minClosures, ' daily closures')) +
+  facet_grid(YEAR ~ .)
+```
+
+***
+#### Can we zoom in on District 2?
+```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+
+map <- get_map(location=c(-71.1153, 42.29), zoom=13)
+
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.1, colour=DISTRICT2), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  scale_size_continuous(range = c(4,20)) +
+  ggtitle(str_c('Areas with at least ', minClosures, ' daily closures')) +
+  facet_grid(YEAR ~ .)
+```
+
+***
+#### What areas got the highest daily closures, by year?
+```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+top <- data %>%
+  group_by(YEAR) %>%
+  arrange(desc(n)) %>%
+  slice(1) %>%
+  rename(DAILY.CLOSURES=n)
+
+knitr::kable(top)
 ```
 
 ***
