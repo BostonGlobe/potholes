@@ -29,7 +29,7 @@ A note on the format: each question is followed by the R code that generates the
 ***
 ### We're going to ignore `BOGUS` at first. Unless mentioned, we'll be plotting all rows.
 #### How many potholes were closed per year?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 data <- potholes %>%
   group_by(year(DATE.CLOSED.R)) %>%
   summarise(potholes = n())
@@ -39,7 +39,7 @@ knitr::kable(data)
 
 ***
 #### What does this look like on a timeseries?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
   group_by(DATE.CLOSED.R) %>%
@@ -59,7 +59,7 @@ ggplot(data, aes(DAY, n)) +
 
 ***
 #### What's the distribution of total daily closures?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
   group_by(DATE.CLOSED.R) %>%
@@ -76,7 +76,7 @@ ggplot(data, aes(n)) +
 
 ***
 #### What areas saw the most number of yearly closures?
-```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=16, warning=FALSE, message=FALSE, dev='jpeg'}
 
 minClosures <- 15
 
@@ -111,7 +111,7 @@ ggmap(map) +
 
 ***
 #### Can we zoom in on District 2?
-```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=16, warning=FALSE, message=FALSE, dev='jpeg'}
 
 map <- get_map(location=c(-71.1153, 42.29), zoom=13)
   
@@ -125,7 +125,7 @@ ggmap(map) +
 
 ***
 #### What areas saw the most number of daily closures?
-```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=16, warning=FALSE, message=FALSE, dev='jpeg'}
 
 data <- potholes %>%
   filter(
@@ -156,7 +156,7 @@ ggmap(map) +
 
 ***
 #### Can we zoom in on District 2?
-```{r, results='asis', fig.width=12, fig.height=21, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=16, warning=FALSE, message=FALSE, dev='jpeg'}
 
 map <- get_map(location=c(-71.1153, 42.29), zoom=13)
 
@@ -170,7 +170,7 @@ ggmap(map) +
 
 ***
 #### What areas got the highest daily closures, by year?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 top <- data %>%
   group_by(YEAR) %>%
   arrange(desc(n)) %>%
@@ -180,9 +180,22 @@ top <- data %>%
 knitr::kable(top)
 ```
 
+
+***
+#### What's the source for the cluster with highest daily closures in 2014?
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
+first <- data[1,]
+
+data <- potholes %>%
+  group_by(Source) %>%
+  tally()
+
+knitr::kable(data)
+```
+
 ***
 #### What's the distribution of daily pothole closures per area, by year?
-```{r, results='asis', fig.width=12, fig.height=7, warning=FALSE, message=FALSE}
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 data <- potholes %>%
   filter(
     LATITUDE!=42.3594, LONGITUDE!=-71.0587,
@@ -205,8 +218,31 @@ ggplot(data, aes(n)) +
 ```
 This graph shows that when multiple potholes are closed in the same area on the same day, most of the time that number is still in the single digits.
 
-### TODO
+***
+#### How long does it take to fix a constituent-generated pothole?
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 
-- how long it takes to fix a pothole
-- remove duplicates by looking at BOGUS, invalid, duplicate, also look at length of complaint
-- 
+convertMinutesToDays <- function(x) {
+  d <- floor(x/(60*24))
+}
+
+data <- potholes %>%
+  filter(Source %in% c('Citizens Connect App', 'Constituent Call', 'Self Service')) %>%
+  transmute(
+    OPEN = mdy_hms(str_c(Date.Created, ' ', Time.Created)),
+    CLOSED = mdy_hms(str_c(Date.Closed, ' ', Time.Closed)),
+    YEAR = year(CLOSED)
+  ) %>%
+  mutate(INTERVAL = interval(OPEN, CLOSED)%/%minutes(1))
+
+data %>%
+  filter(INTERVAL <= 60*24*7) %>%
+  ggplot(aes(INTERVAL)) +
+  geom_histogram(binwidth=60) +
+  scale_x_continuous(label=convertMinutesToDays,breaks=seq(0,60*24*7,60*24)) +
+  ggtitle('Distribution of pothole closure times (duration = 7 days or less)') +
+  xlab('Days') +
+  ylab('Count')
+```
+
+How strange. Why the hump around multiples of 24 hours? Looks like potholes are most likely to be closed 24 hours after they are open, or 48 hours after they are open, etc. How odd.
