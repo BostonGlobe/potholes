@@ -21,24 +21,41 @@ library(zoo)
 # Read csv.
 potholes <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL) %>%
   mutate(DATE.CLOSED.R = mdy(CLOSED_DT))
-
-BOSTON <- fortify(readOGR(dsn='downloaded', layer='BOSTON'))
 ```
 
 A note on the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
 
 ***
-#### How many potholes were closed per year?
+#### In his most recent State of the City speech, Mayor Walsh claimed that the city "filled over 19,000 potholes - 50% more than in 2013." Let's look at the data. How many potholes were closed per year?
 ```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
 data <- potholes %>%
-  group_by(year(DATE.CLOSED.R)) %>%
-  summarise(potholes = n())
+  filter(!is.na(DATE.CLOSED.R)) %>%
+  mutate(YEAR = year(DATE.CLOSED.R)) %>%
+  group_by(YEAR) %>%
+  summarise(POTHOLES = n())
 
 knitr::kable(data)
 ```
 
 ***
-#### What does this look like on a timeseries?
+#### That's a `r I(data[2,]$POTHOLES * 100 / data[1,]$POTHOLES) - 100`% increase. What does this look like over time?
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+data <- potholes %>%
+  filter(!is.na(DATE.CLOSED.R)) %>%
+  arrange(DATE.CLOSED.R) %>%
+  group_by(DATE.CLOSED.R) %>%
+  tally() %>%
+  mutate(moving = rollmean(n, 1, align='center', na.pad=TRUE))
+
+ggplot(data, aes(DATE.CLOSED.R, moving)) +
+  geom_line() +
+  ggtitle('Daily pothole closures') +
+  xlab('Date') +
+  ylab('Pothole closures per day')
+```
+
+***
+#### According to this data, the city fixed `r I(max(data$moving))` in one day. So maybe there is some clerical error here. Maybe the crews submit pothole fixes in large batches. So maybe we should look at a 30-day moving average.
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
 data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
@@ -55,7 +72,7 @@ ggplot(data, aes(DATE.CLOSED.R, moving)) +
 ```
 
 ***
-#### What does this look like on a timeseries, by district and source?
+#### This shows that the city fixed over 100 potholes per day for a 3-month stretch. That's still quite high. Did all districts fix potholes at this speed? What does the data look like by district and source of complaint?
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=12, warning=FALSE, message=FALSE, dpi=50}
 data <- potholes %>%
   filter(
@@ -65,7 +82,8 @@ data <- potholes %>%
   arrange(DATE.CLOSED.R) %>%
   group_by(DATE.CLOSED.R, pwd_district, Source) %>%
   tally() %>%
-  group_by(pwd_district, Source)
+  group_by(pwd_district, Source) %>%
+  ungroup()
 
 ggplot(data, aes(DATE.CLOSED.R, n)) +
   geom_line() +
@@ -74,83 +92,21 @@ ggplot(data, aes(DATE.CLOSED.R, n)) +
   xlab('Date') +
   ylab('Pothole closures per day')
 ```
-Looks like the `Employee Generated` data is inconsistent.
 
 ***
-#### Let's focus on `Employee Generated` closures for district `3`, using a 30-day rolling mean.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+#### This shows that District 2 fixed over 100 potholes in one day, and District 3 fixed over 500 potholes in one day, and just for Employee Generated complaints! Maybe all those potholes are located on the same spot?
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+
 data <- potholes %>%
   filter(
     !is.na(DATE.CLOSED.R),
-    pwd_district == '3',
-    Source == 'Employee Generated'
-  ) %>%
-  arrange(DATE.CLOSED.R) %>%
-  group_by(DATE.CLOSED.R) %>%
-  tally() %>%
-  mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
-
-ggplot(data, aes(DATE.CLOSED.R, moving)) +
-  geom_line() +
-  ggtitle('Daily pothole Employee Generated closures for district 3') +
-  xlab('Date') +
-  ylab('Pothole closures per day')
-```
-This shows that a 2-person crew has been, on average, fixing over 60 potholes a day, 7 days a week, for just under 6 months. And this is only counting `Employee Generated` entries.
-
-***
-#### Let's look at all potholes, by district, on a 30-day rolling mean.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=12, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R),
-    pwd_district != ''
+    pwd_district %in% c('2', '3')
   ) %>%
   arrange(DATE.CLOSED.R) %>%
   group_by(DATE.CLOSED.R, pwd_district) %>%
   tally() %>%
   group_by(pwd_district) %>%
-    mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
-
-ggplot(data, aes(DATE.CLOSED.R, moving)) +
-  geom_line() +
-  facet_grid(pwd_district ~ .) +
-  ggtitle('Daily pothole closures (30-day rolling mean) by district, y-scales are free') +
-  xlab('Date') +
-  ylab('Pothole closures per day')
-```
-Looks like district 2 and 3 have been extremely efficient. They averaged between 20 and 30 potholes per day (if we assume they work 7 days a week) for about half a year.
-
-***
-#### What are the top 10 daily maximums by district and source?
-```{r, results='asis', out.width='910px', fig.width=10, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R),
-    pwd_district != ''
-  ) %>%
-  arrange(DATE.CLOSED.R) %>%
-  group_by(DATE.CLOSED.R, Source, pwd_district) %>%
-  tally() %>%
-  group_by(Source, pwd_district) %>%
   slice(which.max(n)) %>%
-  ungroup() %>%
-  arrange(desc(n)) %>%
-  head(10)
-
-knitr::kable(data)
-```
-
-***
-
-Look at that! District `r I(data[1,]$pwd_district)` fixed `r I(data[1,]$n)` potholes in one day.
-
-***
-#### What are the daily maximums for districts 2 and 3, on a map?
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
-
-maxNumber <- data %>%
-  filter(pwd_district %in% c('2', '3')) %>%
   inner_join(potholes, by=c('DATE.CLOSED.R', 'pwd_district')) %>%
   select(
     LATITUDE,
@@ -162,7 +118,7 @@ maxNumber <- data %>%
   ungroup() %>%
   arrange(desc(n))
 
-district <- maxNumber %>% filter(pwd_district == '2')
+district <- data %>% filter(pwd_district == '2')
 map <- get_map(location=c(-71.1153, 42.29), zoom=13)
 ggmap(map) +
   geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
@@ -170,7 +126,7 @@ ggmap(map) +
   ggtitle('District 2 fixed all these potholes (184) in one day') +
   scale_size_area(max_size=20)
 
-district <- maxNumber %>% filter(pwd_district == '3')
+district <- data %>% filter(pwd_district == '3')
 map <- get_map(location=c(min(district$LONGITUDE), min(district$LATITUDE), max(district$LONGITUDE), max(district$LATITUDE)), zoom=14)
 ggmap(map) +
   geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
@@ -180,73 +136,31 @@ ggmap(map) +
 ```
 
 ***
-#### How long does it take to fix a constituent-generated pothole?
-```{r, results='asis', out.width='910px', fig.width=10, warning=FALSE, message=FALSE, dpi=50}
+#### So this has to be a data entry mistake. We'll make the assumption that those fixes happened all throughout the month. So we'll use a 30-day rolling mean to find the moving average for Districts 2 and 3.
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
 
-convertMinutesToDays <- function(x) {
-  d <- floor(x/(60*24))
+rollingMeanByDistrict <- function(district) {
+  data <- potholes %>%
+    filter(
+      !is.na(DATE.CLOSED.R),
+      pwd_district == district,
+      Source == 'Employee Generated'
+    ) %>%
+    arrange(DATE.CLOSED.R) %>%
+    group_by(DATE.CLOSED.R) %>%
+    tally() %>%
+    mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
+  
+  ggplot(data, aes(DATE.CLOSED.R, moving)) +
+    geom_line() +
+    ggtitle(str_c('Daily pothole Employee Generated closures for district ', district, ' (30-day rolling mean)')) +
+    xlab('Date') +
+    ylab('Pothole closures per day')
 }
 
-data <- potholes %>%
-  filter(Source %in% c('Citizens Connect App', 'Constituent Call', 'Self Service')) %>%
-  transmute(
-    OPEN = mdy_hms(str_c(Date.Created, ' ', Time.Created)),
-    CLOSED = mdy_hms(str_c(Date.Closed, ' ', Time.Closed)),
-    YEAR = year(CLOSED)
-  ) %>%
-  mutate(INTERVAL = interval(OPEN, CLOSED)%/%minutes(1))
-
-data %>%
-  filter(INTERVAL <= 60*24*7) %>%
-  ggplot(aes(INTERVAL)) +
-  geom_histogram(binwidth=60) +
-  scale_x_continuous(label=convertMinutesToDays,breaks=seq(0,60*24*7,60*24)) +
-  ggtitle('Distribution of pothole closure times (duration = 7 days or less)') +
-  xlab('Days') +
-  ylab('Count')
-```
-How strange. Why the hump around multiples of 24 hours? Looks like potholes are most likely to be closed 24 hours after they are open, or 48 hours after they are open, etc. How odd.
-
-***
-#### When are constituent-generated potholes opened?
-```{r, results='asis', out.width='910px', fig.width=10, warning=FALSE, message=FALSE, dpi=50}
-
-convertMinutesToHours <- function(x) {
-  d <- floor(x/60)
-}
-
-potholes %>%
-  filter(Source %in% c('Citizens Connect App', 'Constituent Call', 'Self Service')) %>%
-  transmute(
-    created = str_c(Date.Created, ' ', Time.Created),
-    minutes = hour(mdy_hms(str_c(Date.Created, ' ', Time.Created))) * 60 + minute(mdy_hms(str_c(Date.Created, ' ', Time.Created)))
-  ) %>%
-  ggplot(aes(minutes)) +
-  geom_histogram(binwidth=30) +
-  scale_x_continuous(label=convertMinutesToHours,breaks=seq(0,24*60,60)) +
-  ggtitle('Distribution of constituent-generated pothole report creation') +
-  xlab('Hour') +
-  ylab('Count')
+rollingMeanByDistrict(2)
+rollingMeanByDistrict(3)
 ```
 
 ***
-#### When are constituent-generated potholes closed?
-```{r, results='asis', out.width='910px', fig.width=10, warning=FALSE, message=FALSE, dpi=50}
-
-convertMinutesToHours <- function(x) {
-  d <- floor(x/60)
-}
-
-potholes %>%
-  filter(Source %in% c('Citizens Connect App', 'Constituent Call', 'Self Service')) %>%
-  transmute(
-    created = str_c(Date.Closed, ' ', Time.Closed),
-    minutes = hour(mdy_hms(str_c(Date.Closed, ' ', Time.Closed))) * 60 + minute(mdy_hms(str_c(Date.Closed, ' ', Time.Closed)))
-  ) %>%
-  ggplot(aes(minutes)) +
-  geom_histogram(binwidth=30) +
-  scale_x_continuous(label=convertMinutesToHours,breaks=seq(0,24*60,60)) +
-  ggtitle('Distribution of constituent-generated pothole report closure') +
-  xlab('Hour') +
-  ylab('Count')
-```
+#### This shows that 2-person crews have been, on average, fixing between 40 and 60 potholes per day, 7 days a week, for over 3 months.
