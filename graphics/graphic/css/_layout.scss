@@ -1,7 +1,30 @@
 .igraphic-graphic.graphic {
 
-	.source-and-credit {
-		@include rhythm(8, 0, 0, 0);
+	.analysis {
+		@extend %centercolumn;
+
+		.chart svg {
+			border: solid red 1px;
+		}
+
 	}
+
+
+
+
+
+	// .source-and-credit {
+	// 	@include rhythm(8, 0, 0, 0);
+	// }
+
+	// .question {
+
+	// 	text-align: center;
+
+	// 	span {
+	// 		font-family: $serifSuperStrong;
+	// 		@include adjust-font-size-to($s6);
+	// 	}
+	// }
 	
 }

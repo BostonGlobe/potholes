@@ -11,5 +11,6 @@ data/downloaded
 parts/globe
 potholes.csv
 .Rhistorygraphics/graphic/js/templates/templates.js
-
+data/potholes_cache
 data/.Rhistory
+data/output

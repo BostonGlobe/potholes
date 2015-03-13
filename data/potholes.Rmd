@@ -20,10 +20,13 @@ library(zoo)
 
 ```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE, cache=TRUE}
 # Read csv.
-potholes <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL) %>%
-  mutate(DATE.CLOSED.R = mdy(CLOSED_DT))
+rawdata <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL)
 
-BOSTON <- fortify(readOGR(dsn='downloaded', layer='BOSTON'))
+# Fix invalid dates in raw data.
+potholes <- rbind(
+  rawdata %>% filter(nchar(CLOSED_DT) > 0) %>% mutate(DATE.CLOSED.R = mdy(CLOSED_DT)),
+  rawdata %>% filter(nchar(CLOSED_DT) == 0) %>% mutate(DATE.CLOSED.R = mdy(Date.Closed))
+)
 ```
 
 A note on the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
@@ -47,14 +50,15 @@ data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
   arrange(DATE.CLOSED.R) %>%
   group_by(DATE.CLOSED.R) %>%
-  tally() %>%
-  mutate(moving = rollmean(n, 1, align='center', na.pad=TRUE))
+  summarise(closures = n())
 
-ggplot(data, aes(DATE.CLOSED.R, moving)) +
-  geom_line() +
+ggplot(data, aes(DATE.CLOSED.R, closures)) +
+  geom_area() +
   ggtitle('Daily pothole closures') +
   xlab('Date') +
   ylab('Pothole closures per day')
+
+write.csv(data, file='output/potholeClosuresPerDay.csv')
 ```
 
 ***
@@ -68,7 +72,7 @@ data <- potholes %>%
   mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
 
 ggplot(data, aes(DATE.CLOSED.R, moving)) +
-  geom_line() +
+  geom_area() +
   ggtitle('Daily pothole closures (30-day rolling mean)') +
   xlab('Date') +
   ylab('Pothole closures per day')
@@ -89,7 +93,7 @@ data <- potholes %>%
   ungroup()
 
 ggplot(data, aes(DATE.CLOSED.R, n)) +
-  geom_line() +
+  geom_area() +
   facet_grid(pwd_district ~ Source) +
   ggtitle('Daily pothole closures by district and source') +
   xlab('Date') +
@@ -188,14 +192,14 @@ ggmap(map) +
 
 ***
 #### Which districts are contributing to this 50% increase?
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
 
 data <- rbind(
   (potholes %>%
-    filter(pwd_district %in% c('2', '3')) %>%
-    mutate(district = '2 and 3 combind')),
+    filter(pwd_district %in% c('2')) %>%
+    mutate(district = '2')),
   (potholes %>%
-    filter(!(pwd_district %in% c('2', '3'))) %>%
+    filter(!(pwd_district %in% c('2'))) %>%
     mutate(district = 'rest'))) %>%
   mutate(YEAR = year(DATE.CLOSED.R)) %>%
   filter(!is.na(YEAR)) %>%
@@ -236,5 +240,71 @@ ggmap(map) +
   scale_size_area(max_size=10)
 ```
 
+***
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50}
 
-TODO: scatterplot of closures vs locations, per day
+count <- potholes %>%
+  group_by(DATE.CLOSED.R, pwd_district) %>%
+  summarise(potholes = n())
+
+locations <- potholes %>%
+  group_by(DATE.CLOSED.R, pwd_district, LATITUDE, LONGITUDE) %>%
+  tally() %>%
+  group_by(DATE.CLOSED.R, pwd_district) %>%
+  summarise(locations = n())
+
+data <- count %>%
+  inner_join(locations, by=c('DATE.CLOSED.R', 'pwd_district')) %>%
+  ungroup() %>%
+  arrange(desc(potholes))
+
+ggplot(data, aes(locations, potholes)) +
+  geom_point() +
+  ggtitle('The more locations a crew visits, the more potholes they will fix')
+
+ggplot(data, aes(locations)) +
+  geom_histogram(binwidth=1) +
+  ggtitle(str_c('Crews visit an average of ', median(data$locations), ' locations per day'))
+```
+
+***
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+data <- potholes %>%
+  filter(
+    !is.na(DATE.CLOSED.R),
+    pwd_district == '2'
+  ) %>%
+  transmute(WEEK = floor_date(DATE.CLOSED.R, 'week')) %>%
+  arrange(WEEK) %>%
+  group_by(WEEK) %>%
+  tally()
+
+ggplot(data, aes(WEEK, n)) +
+  geom_area() +
+  ggtitle('Weekly pothole closures for district 2') +
+  xlab('Date') +
+  ylab('Pothole closures per week')
+```
+
+***
+```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
+
+data <- potholes %>%
+  filter(
+    year(DATE.CLOSED.R) == 2014,
+    !grepl('invalid', CLOSURE_REASON, ignore.case=TRUE),
+    !grepl('duplicate', CLOSURE_REASON, ignore.case=TRUE)
+  ) %>%
+  group_by(CLOSURE_REASON) %>%
+  tally() %>%
+  arrange(desc(n))
+
+head(data)
+
+
+```
+
+
+
+
+
