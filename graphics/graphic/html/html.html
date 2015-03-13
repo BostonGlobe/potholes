@@ -1,13 +1,47 @@
 <div class='igraphic-graphic graphic'>
 
-	<div class='hed'>graphic</div>
-	<div class='subhed'>
-		Lorem ipsum Mollit pariatur occaecat velit cillum minim ex consequat reprehenderit nostrud mollit enim ut ex veniam eiusmod.
+	@@include('../../common/html/mast.html')
+	@@include('../../common/html/header.html')
+
+	<div class='analysis'>
+
+		<div class='chart'>
+			<p>According to city of boston data, in 2014 the dpw crews fixed 50% more potholes than the previous year.</p>
+			<img src='../../data/potholes_files/figure-html/unnamed-chunk-4-1.png' />
+		</div>
+
+		<div class='chart'>
+			<p>The most number of potholes fixed in one day: TKTKT on TKTKTKT, at TKTKT locations across the city.</p>
+			<img src='../..//data/potholes_files/figure-html/unnamed-chunk-9-1.jpeg' />
+			<p>(note: think of incorporating district boundaries here)</p>
+		</div>
+
+		<div class='chart'>
+			<p>Switching to a month-long average reduces the noise of the raw data, and clearly shows a dramatic increase in the first half of 2014:</p>
+			<img src='../..//data/potholes_files/figure-html/unnamed-chunk-5-1.png' />
+		</div>
+
+		<div class='chart'>
+			<p>District 2 and 3 were largely responsible for the increase in pothole fixes. Their combined total far surpassed the rest of the districts.</p>
+			<img src='../../data/potholes_files/figure-html/unnamed-chunk-10-1.jpeg' />
+		</div>
+
+		<div class='chart'>
+			<p>Example: district 2's busiest day was TKTKTKT TKTKT potholes fixed at TKTK locations.
+			<img src='../..//data/potholes_files/figure-html/unnamed-chunk-7-1.jpeg' />
+		</div>
+
+		<div class='chart'>
+			<p>But perhaps the most surprising chart is the one that shows locations where crews fixed 15 or more potholes on the same day.</p>
+			<img src='../..//data/potholes_files/figure-html/unnamed-chunk-11-1.jpeg' />
+		</div>
+
+		<div class='chart'>
+			<p>Some of those pothole-heavy locations: a municipal parking lot where few people remember potholes, a TKTKTKTKT and a TKTKTKTKT</p>
+		</div>
+
 	</div>
 
-	<div class='source-and-credit'>
-		<p class='source'><span>DATA: source</span></p>
-		<p class='credit'><span>Reporter / Globe Staff</span></p>
-	</div>
+	@@include('../../common/html/footer.html')
 
 </div>

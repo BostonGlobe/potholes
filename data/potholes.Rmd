@@ -7,6 +7,7 @@ output:
 ---
 
 ```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
+library(leaflet)
 library(stringr)
 library(lubridate)
 library(rgdal)
@@ -21,6 +22,8 @@ library(zoo)
 # Read csv.
 potholes <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL) %>%
   mutate(DATE.CLOSED.R = mdy(CLOSED_DT))
+
+BOSTON <- fortify(readOGR(dsn='downloaded', layer='BOSTON'))
 ```
 
 A note on the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
@@ -55,7 +58,7 @@ ggplot(data, aes(DATE.CLOSED.R, moving)) +
 ```
 
 ***
-#### According to this data, the city fixed `r I(max(data$moving))` in one day. So maybe there is some clerical error here. Maybe the crews submit pothole fixes in large batches. So maybe we should look at a 30-day moving average.
+#### Let's do a 30-day moving average.
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
 data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
@@ -72,7 +75,7 @@ ggplot(data, aes(DATE.CLOSED.R, moving)) +
 ```
 
 ***
-#### This shows that the city fixed over 100 potholes per day for a 3-month stretch. That's still quite high. Did all districts fix potholes at this speed? What does the data look like by district and source of complaint?
+#### This clearly shows much higher activity in 2014 compared to the previous year. What does the data look like by district and source of complaint?
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=12, warning=FALSE, message=FALSE, dpi=50}
 data <- potholes %>%
   filter(
@@ -136,31 +139,102 @@ ggmap(map) +
 ```
 
 ***
-#### So this has to be a data entry mistake. We'll make the assumption that those fixes happened all throughout the month. So we'll use a 30-day rolling mean to find the moving average for Districts 2 and 3.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+#### Show me clusters of 15 or more potholes fixed on the same day by district 2.
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+data <- potholes %>%
+  filter(
+    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
+    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
+    pwd_district == '2'
+  ) %>%
+  group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, pwd_district) %>%
+  tally() %>%
+  ungroup() %>%
+  filter(n >= 15)
 
-rollingMeanByDistrict <- function(district) {
-  data <- potholes %>%
-    filter(
-      !is.na(DATE.CLOSED.R),
-      pwd_district == district,
-      Source == 'Employee Generated'
-    ) %>%
-    arrange(DATE.CLOSED.R) %>%
-    group_by(DATE.CLOSED.R) %>%
-    tally() %>%
-    mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
-  
-  ggplot(data, aes(DATE.CLOSED.R, moving)) +
-    geom_line() +
-    ggtitle(str_c('Daily pothole Employee Generated closures for district ', district, ' (30-day rolling mean)')) +
-    xlab('Date') +
-    ylab('Pothole closures per day')
-}
+map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=13)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour='red'), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data, colour='red') +
+  ggtitle(str_c('Clusters of 15 or more daily pothole closures by district 2')) +
+  scale_size_area(max_size=10)
 
-rollingMeanByDistrict(2)
-rollingMeanByDistrict(3)
+leaflet(data) %>%
+  addTiles('http://{s}.tiles.mapbox.com/v3/gabriel-florit.e222ba6f/{z}/{x}/{y}.png') %>%
+  addCircles(lat = ~ LATITUDE, lng = ~ LONGITUDE, radius = ~(n*5), color='red', weight=1, opacity=1)
 ```
 
 ***
-#### This shows that 2-person crews have been, on average, fixing between 40 and 60 potholes per day, 7 days a week, for over 3 months.
+#### Show the busiest day of the year.
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+data <- potholes %>%
+  group_by(DATE.CLOSED.R) %>%
+  tally() %>%
+  ungroup() %>%
+  slice(which.max(n)) %>%
+  inner_join(potholes, by=c('DATE.CLOSED.R')) %>%
+  group_by(LONGITUDE, LATITUDE, DATE.CLOSED.R) %>%
+  summarise(count = n()) %>%
+  ungroup() %>%
+  arrange(desc(count))
+
+map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=count, alpha=0.05, colour='red'), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=count), data=data) +
+  ggtitle(str_c('All these potholes were fixed on ', data[1,]$DATE.CLOSED.R)) +
+  scale_size_area(max_size=15)
+```
+
+***
+#### Which districts are contributing to this 50% increase?
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+
+data <- rbind(
+  (potholes %>%
+    filter(pwd_district %in% c('2', '3')) %>%
+    mutate(district = '2 and 3 combind')),
+  (potholes %>%
+    filter(!(pwd_district %in% c('2', '3'))) %>%
+    mutate(district = 'rest'))) %>%
+  mutate(YEAR = year(DATE.CLOSED.R)) %>%
+  filter(!is.na(YEAR)) %>%
+  group_by(district, YEAR) %>%
+  tally() %>%
+  summarise(increase = diff(n))
+
+ggplot(data, aes(x=district, y=increase, fill=district)) +
+  geom_bar(stat='identity') +
+  ylab('potholes fixed') +
+  xlab(NULL) +
+  theme(
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  coord_flip() +
+  ggtitle('2014 increase over 2013, by district')
+```
+
+***
+#### Show me clusters of 15 or more potholes fixed on the same day for all districts.
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+data <- potholes %>%
+  filter(
+    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
+    LATITUDE!=42.3601, LONGITUDE!=-71.0579
+  ) %>%
+  group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, pwd_district) %>%
+  tally() %>%
+  ungroup() %>%
+  filter(n >= 15)
+
+map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  ggtitle(str_c('Clusters of 15 or more daily pothole closures by district')) +
+  scale_size_area(max_size=10)
+```
+
+
+TODO: scatterplot of closures vs locations, per day

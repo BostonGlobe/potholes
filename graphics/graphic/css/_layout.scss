@@ -1,8 +1,7 @@
 .igraphic-graphic.graphic {
-	
-	.hed,
-	.subhed {
-		display: none;
+
+	.source-and-credit {
+		@include rhythm(8, 0, 0, 0);
 	}
 	
 }
