@@ -1,10 +1,29 @@
 .igraphic-graphic.graphic {
 
+	$richBlack: #464646;
+
 	.analysis {
 		@extend %centercolumn;
 
-		.chart svg {
-			border: solid red 1px;
+		.chart {
+
+			.axis path,
+			.axis line {
+				fill: none;
+				stroke: $richBlack;
+				shape-rendering: crispEdges;
+			}
+
+			.axis text {
+				font-family: $sansSerif;
+				@include adjust-font-size-to($s3);
+				fill: $richBlack;
+			}
+
+			&.potholeClosuresPerDay {
+				text-align: center;
+			}
+
 		}
 
 	}
@@ -27,4 +46,8 @@
 	// 	}
 	// }
 	
+}
+
+.meter-modal-block.bg-modal--meter {
+	display: none;
 }

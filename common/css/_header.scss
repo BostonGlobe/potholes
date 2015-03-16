@@ -1,7 +1,7 @@
 .igraphic-header {
 
 	@extend %centercolumn;
-	padding-top: 4em;
+	@include rhythm(0, 3/2, 0, 0);
 
 	.hed {
 		@include rhythm(0, 0, 0, 0);

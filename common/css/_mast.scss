@@ -1,9 +1,8 @@
 .igraphic-mast {
 
-	$showEverything: 44em;
+	$showEverything: 400px;
 
 	border-bottom: 1px solid #ccc;
-	position: fixed;
 	width: 100%;
 	background: white;
 	z-index: 300;
@@ -40,45 +39,6 @@
 		}		
 	}
 
-
-	.igraphic-subnav {
-		@include adjust-font-size-to($s3);
-
-		text-align: center;
-		font-family: $sansSerif;
-
-		> * {
-			display: inline-block;
-		}
-	}
-
-	.igraphic-subnav--title span {
-		font-weight: bold;
-		letter-spacing: 0.5px;
-		text-transform: uppercase;
-		color: #9B1518;
-	}
-
-	.igraphic-subnav--linklist {
-
-		display: none;
-		@include breakpoint($showEverything) {
-			display: inline-block;
-		}
-
-		li {
-			display: inline-block;
-			padding-left: 0.5em;
-
-			a {
-				color: #444;
-			}
-
-			a:hover {
-				color: #9B1518;
-			}
-		}
-	}
 
 	.logo {
 		position: absolute;
