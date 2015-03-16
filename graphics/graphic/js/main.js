@@ -9,6 +9,12 @@ var master = $('.igraphic-graphic.graphic');
 
 function makePotholeClosuresPerDay() {
 
+	var outerWidth = $('.igraphic-graphic.graphic .potholeClosuresPerDay').width();
+	var outerHeight = outerWidth/2;
+
+	$('.igraphic-graphic.graphic .potholeClosuresPerDay').empty();
+
+
 	var parseDate = d3.time.format('%Y-%m-%d').parse;
 	var data = require('../../../data/output/potholeClosuresPerDay.csv')
 		.map(function(datum) {
@@ -18,8 +24,6 @@ function makePotholeClosuresPerDay() {
 			};
 		});
 
-	var outerWidth = 600;
-	var outerHeight = 300;
 	var margin = {top: 0, right: 0, bottom: 12, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
@@ -111,22 +115,13 @@ function makePotholeClosuresPerDay() {
 
 makePotholeClosuresPerDay();
 
-// function resize() {
-// 	$('svg', master).each(function(index) {
+function resize() {
 
-// 		var viewBoxParts = this.getAttribute('viewBox').split(' ');
-// 		var width = viewBoxParts[2];
-// 		var height = viewBoxParts[3];
-// 		var aspect = width/height;
+	makePotholeClosuresPerDay();
+}
 
-// 		var targetWidth = $(this).parent().width();
-// 		this.setAttribute('width', targetWidth);
-// 		this.setAttribute('height', targetWidth/aspect);
-// 	});
-// }
-
-// $(window).on('resize', resize);
-// resize();
+$(window).on('resize', resize);
+resize();
 
 
 
