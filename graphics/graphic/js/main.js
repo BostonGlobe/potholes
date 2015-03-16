@@ -1,4 +1,5 @@
 var d3 = require('d3');
+var APDateTime = require('../../../common/js/APDateTime.js');
 
 function log(s) {
 	console.log(JSON.stringify(s, null, 4));
@@ -17,8 +18,8 @@ function makePotholeClosuresPerDay() {
 			};
 		});
 
-	var outerWidth = 300;
-	var outerHeight = 120;
+	var outerWidth = 600;
+	var outerHeight = 300;
 	var margin = {top: 0, right: 0, bottom: 12, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
@@ -29,8 +30,9 @@ function makePotholeClosuresPerDay() {
 			height: outerHeight,
 			viewBox: `0 0 ${outerWidth} ${outerHeight}`,
 			preserveAspectRatio: 'xMidYMid'
-		})
-	.append('g')
+		});
+
+	var g = svg.append('g')
 		.attr('transform', `translate(${margin.left}, ${margin.top})`);
 
 	var x = d3.time.scale()
@@ -46,7 +48,7 @@ function makePotholeClosuresPerDay() {
 	    .y0(height)
 	    .y1(d => y(d.potholes));
 
-	svg.append('path')
+	g.append('path')
 		.datum(data)
 		.attr('class', 'area')
 		.attr('d', area);
@@ -57,7 +59,7 @@ function makePotholeClosuresPerDay() {
 		.ticks(d3.time.years, 1)
 		.tickSize(margin.bottom, margin.bottom);
 
-	svg.append('g')
+	g.append('g')
 		.attr('class', 'x axis')
 		.attr('transform', `translate(0,${height})`)
 		.call(xAxis)
@@ -69,6 +71,42 @@ function makePotholeClosuresPerDay() {
 			y: 5,
 			x: 3
 		});
+
+	var annotationPoints = _.chain(data).sortBy('potholes').reverse().take(1).value();
+
+	var annotationMarkerMargin = 25;
+
+	g.append('g')
+		.attr({
+			'class': 'annotationMarkers'
+		})
+		.selectAll('.annotationMarker')
+		.data(annotationPoints)
+		.enter()
+		.append('line')
+		.attr({
+			x1: d => x(d.date) + 5,
+			x2: d => x(d.date) + annotationMarkerMargin,
+			y1: d => y(d.potholes) + 20,
+			y2: d => y(d.potholes) + 20
+		});
+
+	d3.select('.igraphic-graphic.graphic .potholeClosuresPerDay').append('div')
+		.attr('class', 'annotations')
+		.selectAll('.annotation')
+		.data(annotationPoints)
+		.enter()
+		.append('div')
+		.attr({
+			'class': 'annotation'
+		})
+		.style({
+			left: d => `${100 * (x(d.date) + annotationMarkerMargin)/x.range()[1]}%`
+		})
+		.html(function(d) {
+			return `<span class='date'>${APDateTime.date(d.date)}</span><span class='potholes'>${d.potholes} potholes</span>`;
+		});
+
 }
 
 makePotholeClosuresPerDay();

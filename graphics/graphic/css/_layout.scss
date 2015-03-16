@@ -7,6 +7,16 @@
 
 		.chart {
 
+			position: relative;
+
+			svg {
+				vertical-align: bottom;
+			}
+
+			svg text {
+				font-family: $sansSerif;
+			}
+
 			.axis path,
 			.axis line {
 				fill: none;
@@ -15,17 +25,47 @@
 			}
 
 			.axis text {
-				font-family: $sansSerif;
-				@include adjust-font-size-to($s3);
 				fill: $richBlack;
+				font-size: 10px;
 			}
 
 			&.potholeClosuresPerDay {
 				text-align: center;
 			}
 
-		}
+			.annotationMarkers line {
+				stroke: $richBlack;
+				shape-rendering: crispEdges;
+				stroke-dasharray: 1,1;
+			}
 
+			.annotations {
+				position: absolute;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+
+				.annotation {
+					position: absolute;
+					font-family: $sansSerif;
+					@include adjust-font-size-to($s3);
+					@include adjust-leading-to(1);
+					width: 10em;
+					text-align: left;
+					padding: 0.5em;
+					background: white;
+
+					span {
+						display: inline-block;
+
+						&.date {
+							font-weight: bold;
+						}
+					}
+				}
+			}
+		}
 	}
 
 
