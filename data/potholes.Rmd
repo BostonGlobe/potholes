@@ -58,7 +58,7 @@ ggplot(data, aes(DATE.CLOSED.R, closures)) +
   xlab('Date') +
   ylab('Pothole closures per day')
 
-write.csv(data, file='output/potholeClosuresPerDay.csv')
+write.csv(data, file='output/potholeClosuresPerDay.csv', row.names=FALSE)
 ```
 
 ***
@@ -69,13 +69,20 @@ data <- potholes %>%
   arrange(DATE.CLOSED.R) %>%
   group_by(DATE.CLOSED.R) %>%
   tally() %>%
-  mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE))
+  ungroup() %>%
+  mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE)) %>%
+  filter(!is.na(moving))
 
 ggplot(data, aes(DATE.CLOSED.R, moving)) +
   geom_area() +
   ggtitle('Daily pothole closures (30-day rolling mean)') +
   xlab('Date') +
   ylab('Pothole closures per day')
+
+csv <- data %>%
+  select(-n)
+
+write.csv(csv, file='output/30dayRollingMean.csv', row.names=FALSE)
 ```
 
 ***
@@ -181,6 +188,11 @@ data <- potholes %>%
   summarise(count = n()) %>%
   ungroup() %>%
   arrange(desc(count))
+
+csv <- data %>%
+  select(-DATE.CLOSED.R)
+
+write.csv(csv, file='output/maxDailyPotholeClosures.csv', row.names=FALSE)
 
 map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
 ggmap(map) +

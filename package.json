@@ -29,6 +29,7 @@
     "gulp-util": "3.0.0",
     "gulp-webpack": "1.0.0",
     "http-rewrite-middleware": "0.1.6",
+    "imports-loader": "^0.6.3",
     "inquirer": "0.6.0",
     "js-yaml": "3.1.0",
     "json-loader": "0.5.1",
@@ -46,6 +47,7 @@
   },
   "dependencies": {
     "d3": "^3.5.5",
-    "dsv-loader": "^1.0.0"
+    "dsv-loader": "^1.0.0",
+    "leaflet": "^0.7.3"
   }
 }
