@@ -204,15 +204,17 @@ ggmap(map) +
 data <- rbind(
   (potholes %>%
     filter(pwd_district %in% c('2')) %>%
-    mutate(district = '2')),
+    mutate(district = 'District 2')),
   (potholes %>%
     filter(!(pwd_district %in% c('2'))) %>%
-    mutate(district = 'rest'))) %>%
+    mutate(district = 'Rest'))) %>%
   mutate(YEAR = year(DATE.CLOSED.R)) %>%
   filter(!is.na(YEAR)) %>%
   group_by(district, YEAR) %>%
   tally() %>%
   summarise(increase = diff(n))
+
+write.csv(data, 'output/yearlyIncreaseByDistrict.csv', row.names = FALSE)
 
 ggplot(data, aes(x=district, y=increase, fill=district)) +
   geom_bar(stat='identity') +
