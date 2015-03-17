@@ -1,5 +1,7 @@
 var d3 = require('d3');
 var APDateTime = require('../../../common/js/APDateTime.js');
+var colors = require('../../../common/js/colors.js');
+var util = require('../../../common/js/util.js');
 
 var Leaflet = require('leaflet');
 
@@ -14,125 +16,14 @@ function moveToFront(element) {
 var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
 
-function make30dayRollingMean() {
-
-	var outerWidth = $('._30dayRollingMean', master).width();
-	var outerHeight = outerWidth/3;
-
-	$('._30dayRollingMean', master).empty();
-
-	var parseDate = d3.time.format('%Y-%m-%d').parse;
-	var data = require('../../../data/output/30dayRollingMean.csv')
-		.map(function(datum) {
-			return {
-				date: parseDate(datum['DATE.CLOSED.R']),
-				moving: +datum.moving
-			};
-		});
-
-	var margin = {top: 20, right: 0, bottom: 15, left: 0};
-	var width = outerWidth - margin.left - margin.right;
-	var height = outerHeight - margin.top - margin.bottom;
-
-	var svg = d3.select(`${masterSelector} ._30dayRollingMean`).append('svg')
-		.attr({
-			width: outerWidth,
-			height: outerHeight
-		});
-
-	var g = svg.append('g')
-		.attr('transform', `translate(${margin.left}, ${margin.top})`);
-
-	var x = d3.time.scale()
-		.range([0, width])
-		.domain(d3.extent(data, d => d.date));
-
-	var y = d3.scale.linear()
-		.range([height, 0])
-		.domain([0, d3.max(data, d => d.moving)]);
-
-	var area = d3.svg.area()
-	    .x(d => x(d.date))
-	    .y0(height)
-	    .y1(d => y(d.moving));
-
-	var xAxis = d3.svg.axis()
-		.scale(x)
-		.orient('bottom')
-		.ticks(d3.time.months, 6)
-		.tickSize(margin.bottom - 2, 0);
-
-	var yTicks = [100];
-
-	var yAxis = d3.svg.axis()
-		.scale(y)
-		.orient('left')
-		.tickValues(yTicks)
-		.tickSize(0);
-
-	g.append('path')
-		.datum(data)
-		.attr('class', 'area fill')
-		.attr('d', area);
-
-	g.append('g')
-		.attr('class', 'gridlines')
-		.selectAll('line')
-		.data(yTicks)
-		.enter()
-		.append('line')
-		.attr({
-			x1: 0,
-			x2: x.range()[1],
-			y1: d => y(d),
-			y2: d => y(d)
-		});
-
-	g.append('g')
-		.attr('class', 'y axis')
-		.call(yAxis)
-	.selectAll('text')
-		.style({
-			'text-anchor': 'start'
-		})
-		.attr({
-			y: 0,
-			x: 0
-		});
-
-	g.append('path')
-		.datum(data)
-		.attr('class', 'area stroke')
-		.attr('d', area);
-
-	var xAxisElements = g.append('g')
-		.attr('class', 'x axis')
-		.attr('transform', `translate(0,${height})`)
-		.call(xAxis);
-
-	var pathDomain = xAxisElements.select('path.domain')[0][0];
-	moveToFront(pathDomain);
-
-	xAxisElements.selectAll('text')
-		.style({
-			'text-anchor': 'start'
-		})
-		.attr({
-			y: 5,
-			x: 3
-		});
-
-	d3.select(`${masterSelector} ._30dayRollingMean`).append('div')
-		.attr('class', 'title')
-		.html('<span>Daily pothole closures, 30-day average</span>');
-}
-
 function makePotholeClosuresPerDay() {
 
-	var outerWidth = $('.potholeClosuresPerDay', master).width();
+	var chartSelector = '.potholeClosuresPerDay';
+
+	var outerWidth = $(chartSelector, master).width();
 	var outerHeight = outerWidth/3;
 
-	$('.potholeClosuresPerDay', master).empty();
+	$(chartSelector, master).empty();
 
 	var parseDate = d3.time.format('%Y-%m-%d').parse;
 	var data = require('../../../data/output/potholeClosuresPerDay.csv')
@@ -147,7 +38,7 @@ function makePotholeClosuresPerDay() {
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
-	var svg = d3.select(`${masterSelector} .potholeClosuresPerDay`).append('svg')
+	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
 		.attr({
 			width: outerWidth,
 			height: outerHeight
@@ -171,7 +62,10 @@ function makePotholeClosuresPerDay() {
 
 	var annotationPoints = _.chain(data).sortBy('potholes').reverse().take(1).value();
 
-	var annotationMarkerMargin = 25;
+	var annotationMarkerMargin = {
+		left: 25,
+		top: 10
+	};
 
 	g.append('path')
 		.datum(data)
@@ -203,32 +97,31 @@ function makePotholeClosuresPerDay() {
 		})
 		.selectAll('.annotationMarker')
 		.data(annotationPoints)
-		.enter()
-		.append('line')
+	.enter().append('line')
 		.attr({
 			x1: d => x(d.date) + 5,
-			x2: d => x(d.date) + annotationMarkerMargin,
-			y1: d => y(d.potholes) + 10,
-			y2: d => y(d.potholes) + 10
+			x2: d => x(d.date) + annotationMarkerMargin.left,
+			y1: d => y(d.potholes) + annotationMarkerMargin.top,
+			y2: d => y(d.potholes) + annotationMarkerMargin.top
 		});
 
-	d3.select(`${masterSelector} .potholeClosuresPerDay`).append('div')
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
 		.attr('class', 'annotations')
 		.selectAll('.annotation')
 		.data(annotationPoints)
-		.enter()
-		.append('div')
+	.enter().append('div')
 		.attr({
 			'class': 'annotation'
 		})
 		.style({
-			left: d => `${100 * (x(d.date) + annotationMarkerMargin)/x.range()[1]}%`
+			left: d => `${100 * (x(d.date) + annotationMarkerMargin.left)/x.range()[1]}%`,
+			top: d => `${100 * (y(d.potholes) + annotationMarkerMargin.top)/y.range()[0]}%`
 		})
 		.html(function(d) {
 			return `<span class='date'>${APDateTime.date(d.date)}</span><span class='potholes'>${d.potholes} potholes</span>`;
 		});
 
-	d3.select(`${masterSelector} .potholeClosuresPerDay`).append('div')
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
 		.attr('class', 'title')
 		.html('<span>Pothole closures per day</span>');
 }
@@ -265,31 +158,109 @@ function makeMaxDailyPotholeClosures() {
 	circlesLayer.addTo(map);
 }
 
+function makeYearlyIncreaseByDistrict() {
+
+	var barMargin = 2;
+	var barHeight = 20 + barMargin*2;
+	var data = _.chain(require('../../../data/output/yearlyIncreaseByDistrict.csv'))
+		.map(function(d) {
+			return {
+				district: d.district,
+				increase: +d.increase
+			};
+		})
+		.sortBy('district')
+		.value();
+
+	var chartSelector = '.yearlyIncreaseByDistrict';
+
+	var margin = {top: 30, right: 0, bottom: 0, left: 60};
+
+	var outerWidth = $(chartSelector, master).width();
+	var outerHeight = data.length * barHeight + margin.top + margin.bottom;
+
+	$(chartSelector, master).empty();
+
+	var width = outerWidth - margin.left - margin.right;
+	var height = outerHeight - margin.top - margin.bottom;
+
+	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
+		.attr({
+			width: outerWidth,
+			height: outerHeight
+		});
+
+	var g = svg.append('g')
+		.attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+	var x = d3.scale.linear()
+		.range([0, width])
+		.domain([0, d3.max(data, d => d.increase)]);
+
+	var bars = g.append('g')
+		.attr('class', 'bars')
+		.selectAll('.bar')
+		.data(data)
+	.enter().append('g')
+		.attr({
+			'class': 'bar',
+			'transform': (d, i) => `translate(0, ${i*barHeight})`
+		});
+
+	bars.append('rect')
+		.attr({
+			width: d => x(d.increase),
+			height: barHeight - barMargin*2
+		})
+		.style({
+			fill: (d, i) => colors.secondary[i]
+		});
+
+	bars.append('text')
+		.attr({
+			'class': 'name',
+			x: -10,
+			y: barHeight / 2,
+			dy: '0.25em'
+		})
+		.style({
+			'font-size': `${barHeight/2}px`,
+			'text-anchor': 'end'
+		})
+		.text(d => d.district);
+
+	bars.append('text')
+		.attr({
+			'class': 'number',
+			x: d => x(d.increase),
+			y: barHeight / 2,
+			dx: '-0.25em',
+			dy: '0.25em'
+		})
+		.style({
+			'font-size': `${barHeight/2}px`,
+			'text-anchor': 'end'
+		})
+		.text(d => util.numberWithCommas(d.increase));
+
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
+		.attr('class', 'title')
+		.html('<span>Yearly increase in pothole closures</span>');
+}
+
 var thingsHaveBeenDrawn = false;
 
 function resize() {
 
 	makePotholeClosuresPerDay();
+	makeYearlyIncreaseByDistrict();
 
 	// if (!thingsHaveBeenDrawn) {
 	// 	makeMaxDailyPotholeClosures();
 	// }	
-	make30dayRollingMean();
 
 	thingsHaveBeenDrawn = true;
 }
 
 $(window).on('resize', resize);
 resize();
-
-// 2014-01-30
-
-
-
-
-
-
-
-
-
-

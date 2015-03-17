@@ -7,9 +7,6 @@ $cool: #ebf3f7;
 
 	.analysis {
 
-		// font-family: $sansSerif;
-		// @include adjust-font-size-to($s3p5);
-
 		@extend %centercolumn;
 
 		p.description {
@@ -40,6 +37,10 @@ $cool: #ebf3f7;
 				font-family: $sansSerif;
 			}
 
+			rect {
+				shape-rendering: crispEdges;
+			}
+
 			.x.axis path,
 			.x.axis line {
 				fill: none;
@@ -52,31 +53,11 @@ $cool: #ebf3f7;
 				font-size: 10px;
 			}
 
-			.gridlines line {
-				stroke: white;
-				shape-rendering: crispEdges;
-			}
+			&.yearlyIncreaseByDistrict {
 
-			&.potholeClosuresPerDay {
-				text-align: center;
-			}
-
-			&._30dayRollingMean {
-
-				.x.axis path.domain {
-					stroke: white;
-				}
-
-				path.area {
-
-					&.fill {
-						fill: $neutral;
-						stroke: none;
-					}
-					&.stroke {
-						stroke: black;
-						fill: none;
-					}
+				g.bar text.number {
+					fill: white;
+					text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
 				}
 			}
 
