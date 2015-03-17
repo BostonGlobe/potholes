@@ -78,11 +78,6 @@ ggplot(data, aes(DATE.CLOSED.R, moving)) +
   ggtitle('Daily pothole closures (30-day rolling mean)') +
   xlab('Date') +
   ylab('Pothole closures per day')
-
-csv <- data %>%
-  select(-n)
-
-write.csv(csv, file='output/30dayRollingMean.csv', row.names=FALSE)
 ```
 
 ***
@@ -296,6 +291,26 @@ ggplot(data, aes(WEEK, n)) +
   ggtitle('Weekly pothole closures for district 2') +
   xlab('Date') +
   ylab('Pothole closures per week')
+```
+
+***
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+data <- potholes %>%
+  filter(
+    !is.na(DATE.CLOSED.R)
+  ) %>%
+  transmute(WEEK = floor_date(DATE.CLOSED.R, 'week')) %>%
+  arrange(WEEK) %>%
+  group_by(WEEK) %>%
+  tally()
+
+ggplot(data, aes(WEEK, n)) +
+  geom_area() +
+  ggtitle('Weekly pothole closures') +
+  xlab('Date') +
+  ylab('Pothole closures per week')
+
+write.csv(data, file='output/potholeClosuresPerWeek.csv', row.names=FALSE)
 ```
 
 ***

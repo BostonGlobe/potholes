@@ -12,9 +12,25 @@ $cool: #ebf3f7;
 
 		@extend %centercolumn;
 
+		p.description {
+			@include rhythm(1, 0, 0, 0);
+			@include adjust-leading-to(1);
+		}
+
 		.chart {
 
 			position: relative;
+			@include rhythm(1, 0, 0, 4);
+
+			.title {
+				position: absolute;
+				top: 0;
+				left: 0;
+
+				span {
+					font-family: $sansSerifStrong;
+				}
+			}
 
 			svg {
 				vertical-align: bottom;

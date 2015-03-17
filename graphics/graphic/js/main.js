@@ -17,7 +17,7 @@ var master = $(masterSelector);
 function make30dayRollingMean() {
 
 	var outerWidth = $('._30dayRollingMean', master).width();
-	var outerHeight = outerWidth/5;
+	var outerHeight = outerWidth/3;
 
 	$('._30dayRollingMean', master).empty();
 
@@ -30,7 +30,7 @@ function make30dayRollingMean() {
 			};
 		});
 
-	var margin = {top: 0, right: 0, bottom: 15, left: 0};
+	var margin = {top: 20, right: 0, bottom: 15, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
@@ -121,12 +121,16 @@ function make30dayRollingMean() {
 			y: 5,
 			x: 3
 		});
+
+	d3.select(`${masterSelector} ._30dayRollingMean`).append('div')
+		.attr('class', 'title')
+		.html('<span>Daily pothole closures, 30-day average</span>');
 }
 
 function makePotholeClosuresPerDay() {
 
 	var outerWidth = $('.potholeClosuresPerDay', master).width();
-	var outerHeight = outerWidth/5;
+	var outerHeight = outerWidth/3;
 
 	$('.potholeClosuresPerDay', master).empty();
 
@@ -139,7 +143,7 @@ function makePotholeClosuresPerDay() {
 			};
 		});
 
-	var margin = {top: 0, right: 0, bottom: 15, left: 0};
+	var margin = {top: 20, right: 0, bottom: 15, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
@@ -180,27 +184,6 @@ function makePotholeClosuresPerDay() {
 		.ticks(d3.time.years, 1)
 		.tickSize(margin.bottom - 2, margin.bottom - 2);
 
-	var yTicks = [500];
-
-	var yAxis = d3.svg.axis()
-		.scale(y)
-		.orient('left')
-		.tickValues(yTicks)
-		.tickSize(0);
-
-	g.append('g')
-		.attr('class', 'gridlines')
-		.selectAll('line')
-		.data(yTicks)
-		.enter()
-		.append('line')
-		.attr({
-			x1: 0,
-			x2: x.range()[1],
-			y1: d => y(d),
-			y2: d => y(d)
-		});
-
 	g.append('g')
 		.attr('class', 'x axis')
 		.attr('transform', `translate(0,${height})`)
@@ -212,18 +195,6 @@ function makePotholeClosuresPerDay() {
 		.attr({
 			y: 5,
 			x: 3
-		});
-
-	g.append('g')
-		.attr('class', 'y axis')
-		.call(yAxis)
-	.selectAll('text')
-		.style({
-			'text-anchor': 'start'
-		})
-		.attr({
-			y: 0,
-			x: 0
 		});
 
 	g.append('g')
@@ -256,6 +227,10 @@ function makePotholeClosuresPerDay() {
 		.html(function(d) {
 			return `<span class='date'>${APDateTime.date(d.date)}</span><span class='potholes'>${d.potholes} potholes</span>`;
 		});
+
+	d3.select(`${masterSelector} .potholeClosuresPerDay`).append('div')
+		.attr('class', 'title')
+		.html('<span>Pothole closures per day</span>');
 }
 
 function makeMaxDailyPotholeClosures() {
@@ -296,9 +271,9 @@ function resize() {
 
 	makePotholeClosuresPerDay();
 
-	if (!thingsHaveBeenDrawn) {
-		makeMaxDailyPotholeClosures();
-	}	
+	// if (!thingsHaveBeenDrawn) {
+	// 	makeMaxDailyPotholeClosures();
+	// }	
 	make30dayRollingMean();
 
 	thingsHaveBeenDrawn = true;
