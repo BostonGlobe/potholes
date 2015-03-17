@@ -7,6 +7,10 @@ function log(s) {
 	console.log(JSON.stringify(s, null, 4));
 }
 
+function moveToFront(element) {
+	element.parentNode.insertBefore(element, element.parentNode.firstChild);
+}
+
 var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
 
@@ -52,37 +56,24 @@ function make30dayRollingMean() {
 	    .y0(height)
 	    .y1(d => y(d.moving));
 
-	g.append('path')
-		.datum(data)
-		.attr('class', 'area')
-		.attr('d', area);
-
 	var xAxis = d3.svg.axis()
 		.scale(x)
 		.orient('bottom')
 		.ticks(d3.time.months, 6)
 		.tickSize(margin.bottom - 2, 0);
 
-	g.append('g')
-		.attr('class', 'x axis')
-		.attr('transform', `translate(0,${height})`)
-		.call(xAxis)
-	.selectAll('text')
-		.style({
-			'text-anchor': 'start'
-		})
-		.attr({
-			y: 5,
-			x: 3
-		});
-
-	var yTicks = [50, 100, 150];
+	var yTicks = [100];
 
 	var yAxis = d3.svg.axis()
 		.scale(y)
 		.orient('left')
 		.tickValues(yTicks)
 		.tickSize(0);
+
+	g.append('path')
+		.datum(data)
+		.attr('class', 'area fill')
+		.attr('d', area);
 
 	g.append('g')
 		.attr('class', 'gridlines')
@@ -107,6 +98,28 @@ function make30dayRollingMean() {
 		.attr({
 			y: 0,
 			x: 0
+		});
+
+	g.append('path')
+		.datum(data)
+		.attr('class', 'area stroke')
+		.attr('d', area);
+
+	var xAxisElements = g.append('g')
+		.attr('class', 'x axis')
+		.attr('transform', `translate(0,${height})`)
+		.call(xAxis);
+
+	var pathDomain = xAxisElements.select('path.domain')[0][0];
+	moveToFront(pathDomain);
+
+	xAxisElements.selectAll('text')
+		.style({
+			'text-anchor': 'start'
+		})
+		.attr({
+			y: 5,
+			x: 3
 		});
 }
 
@@ -167,7 +180,7 @@ function makePotholeClosuresPerDay() {
 		.ticks(d3.time.years, 1)
 		.tickSize(margin.bottom - 2, margin.bottom - 2);
 
-	var yTicks = [200, 400, 600];
+	var yTicks = [500];
 
 	var yAxis = d3.svg.axis()
 		.scale(y)

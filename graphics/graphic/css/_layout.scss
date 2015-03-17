@@ -1,8 +1,15 @@
+$richBlack: #464646;
+$neutral: #ecedee;
+$warm: #edece4;
+$cool: #ebf3f7;
+
 .igraphic-graphic.graphic {
 
-	$richBlack: #464646;
-
 	.analysis {
+
+		// font-family: $sansSerif;
+		// @include adjust-font-size-to($s3p5);
+
 		@extend %centercolumn;
 
 		.chart {
@@ -38,9 +45,23 @@
 				text-align: center;
 			}
 
-			&._30dayRollingMean path.area {
-				fill: $richBlack;
-				stroke: black;
+			&._30dayRollingMean {
+
+				.x.axis path.domain {
+					stroke: white;
+				}
+
+				path.area {
+
+					&.fill {
+						fill: $neutral;
+						stroke: none;
+					}
+					&.stroke {
+						stroke: black;
+						fill: none;
+					}
+				}
 			}
 
 			.annotationMarkers line {
