@@ -14,20 +14,19 @@ $cool: #ebf3f7;
 			@include adjust-leading-to(1);
 		}
 
+		.chart-title {
+
+			@include rhythm(1, 0, 0, 1/2);
+
+			span {
+				font-family: $sansSerifStrong;
+			}
+		}
+
 		.chart {
 
 			position: relative;
-			@include rhythm(1, 0, 0, 4);
-
-			.title {
-				position: absolute;
-				top: 0;
-				left: 0;
-
-				span {
-					font-family: $sansSerifStrong;
-				}
-			}
+			@include rhythm(0, 0, 0, 4);
 
 			svg {
 				vertical-align: bottom;
@@ -46,6 +45,26 @@ $cool: #ebf3f7;
 				fill: none;
 				stroke: $richBlack;
 				shape-rendering: crispEdges;
+			}
+
+			.y.axis path.domain {
+				display: none;
+			}
+
+			.gridlines line {
+				stroke: white;
+				stroke-width: 1px;
+				shape-rendering: crispEdges;
+			}
+
+			path.area.fill {
+				fill: $warm;
+				stroke: none;
+			}
+
+			path.area.stroke {
+				fill: none;
+				stroke: black;
 			}
 
 			.axis text {
@@ -77,15 +96,16 @@ $cool: #ebf3f7;
 				.annotation {
 					position: absolute;
 					font-family: $sansSerif;
-					@include adjust-font-size-to($s3);
-					@include adjust-leading-to(1);
-					width: 10em;
+					width: 5em;
 					text-align: left;
-					padding: 0 0.5em;
+					padding: 0 0.2em;
 					background: white;
+					margin-top: -0.3em;
+					@include adjust-leading-to(2/3);
 
 					span {
 						display: inline-block;
+						@include adjust-font-size-to($s3, 1/2);
 
 						&.date {
 							font-weight: bold;
@@ -95,14 +115,14 @@ $cool: #ebf3f7;
 			}
 		}
 
-		.map {
+		// .map {
 
-			&.maxDailyPotholeClosures {
-				width: 100%;
-				height: 0%;
-				padding-bottom: 100%;
-			}
-		}
+		// 	&.maxDailyPotholeClosures {
+		// 		width: 100%;
+		// 		height: 0%;
+		// 		padding-bottom: 100%;
+		// 	}
+		// }
 	}
 
 

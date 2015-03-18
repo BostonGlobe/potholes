@@ -229,12 +229,13 @@ ggplot(data, aes(x=district, y=increase, fill=district)) +
 ```
 
 ***
-#### Show me clusters of 15 or more potholes fixed on the same day for all districts.
+#### Show me clusters of 15 or more potholes fixed on the same day for all districts in 2014.
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
 data <- potholes %>%
   filter(
     LATITUDE!=42.3594, LONGITUDE!=-71.0587,
-    LATITUDE!=42.3601, LONGITUDE!=-71.0579
+    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
+    year(DATE.CLOSED.R) == 2014
   ) %>%
   group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, pwd_district) %>%
   tally() %>%
@@ -245,7 +246,7 @@ map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONG
 ggmap(map) +
   geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=data) +
   geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
-  ggtitle(str_c('Clusters of 15 or more daily pothole closures by district')) +
+  ggtitle(str_c('Clusters of 15 or more daily pothole closures by district, in 2014')) +
   scale_size_area(max_size=10)
 ```
 
@@ -293,6 +294,8 @@ ggplot(data, aes(WEEK, n)) +
   ggtitle('Weekly pothole closures for district 2') +
   xlab('Date') +
   ylab('Pothole closures per week')
+
+write.csv(data, 'output/weeklyClosuresForDistrict2.csv', row.names = FALSE)
 ```
 
 ***

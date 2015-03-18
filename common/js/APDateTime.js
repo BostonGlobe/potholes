@@ -1,9 +1,9 @@
 module.exports = {
 
 	// return something like "July 11, 2013"
-	date: function(date) {
+	date: function(date, noYear) {
 	  var month = ['Jan.','Feb.','March','April','May','June','July','Aug.','Sept.','Oct.','Nov.','Dec.'][date.getMonth()];
-	  return month + ' ' + date.getDate() + ', ' + date.getFullYear();
+	  return month + ' ' + date.getDate() + (noYear ? '' : (', ' + date.getFullYear()));
 	},
 
 	// return something like "12:24 p.m."
