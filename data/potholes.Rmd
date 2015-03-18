@@ -120,9 +120,10 @@ data <- potholes %>%
   select(
     LATITUDE,
     LONGITUDE,
-    pwd_district
+    pwd_district,
+    DATE.CLOSED.R
   ) %>%
-  group_by(LATITUDE, LONGITUDE, pwd_district) %>%
+  group_by(LATITUDE, LONGITUDE, pwd_district, DATE.CLOSED.R) %>%
   tally() %>%
   ungroup() %>%
   arrange(desc(n))
@@ -132,8 +133,13 @@ map <- get_map(location=c(-71.1153, 42.29), zoom=13)
 ggmap(map) +
   geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
   geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=district) +
-  ggtitle('District 2 fixed all these potholes (184) in one day') +
+  ggtitle(str_c('District ', unique(district$pwd_district), ' fixed all these potholes (', sum(district$n), ') on ', unique(district$DATE.CLOSED.R))) +
   scale_size_area(max_size=20)
+
+csv <- district %>%
+  select(LATITUDE,LONGITUDE,n)
+
+write.csv(csv, str_c('output/bestDayForDistrict', unique(district$pwd_district), '.csv'), row.names = FALSE)
 
 district <- data %>% filter(pwd_district == '3')
 map <- get_map(location=c(min(district$LONGITUDE), min(district$LATITUDE), max(district$LONGITUDE), max(district$LATITUDE)), zoom=14)
