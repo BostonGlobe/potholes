@@ -108,6 +108,8 @@ ggplot(data, aes(DATE.CLOSED.R, n)) +
 
 data <- potholes %>%
   filter(
+#    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
+#    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
     !is.na(DATE.CLOSED.R),
     pwd_district %in% c('2', '3')
   ) %>%
@@ -139,7 +141,7 @@ ggmap(map) +
 csv <- district %>%
   select(LATITUDE,LONGITUDE,n)
 
-write.csv(csv, str_c('output/bestDayForDistrict', unique(district$pwd_district), '.csv'), row.names = FALSE)
+write.csv(csv, str_c('output/bestDayForDistrict', unique(district$pwd_district),'_', unique(district$DATE.CLOSED.R), '.csv'), row.names = FALSE)
 
 district <- data %>% filter(pwd_district == '3')
 map <- get_map(location=c(min(district$LONGITUDE), min(district$LATITUDE), max(district$LONGITUDE), max(district$LATITUDE)), zoom=14)

@@ -177,7 +177,7 @@ function makeYearlyIncreaseByDistrict() {
 			height: barHeight - barMargin*2
 		})
 		.style({
-			fill: (d, i) => colors.secondary[i]
+			fill: (d, i) => colors.array.secondary[i]
 		});
 
 	bars.append('text')
@@ -349,6 +349,72 @@ function makeWeeklyClosuresForDistrict2() {
 		});
 }
 
+function makeBestDayForDistrict2() {
+
+	var chartSelector = '.bestDayForDistrict2';
+
+	var outerWidth = $(chartSelector, master).width();
+	var outerHeight = 2789/2411*outerWidth;
+
+	$(chartSelector, master).empty();
+
+	var data = require('../../../data/output/bestDayForDistrict2_2014-06-20.csv')
+		.map(function(datum) {
+			return {
+				lat: +datum.LATITUDE,
+				lng: +datum.LONGITUDE,
+				potholes: +datum.n
+			};
+		});
+
+	var margin = {top: 0, right: 0, bottom: 0, left: 0};
+	var width = outerWidth - margin.left - margin.right;
+	var height = outerHeight - margin.top - margin.bottom;
+
+	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
+		.attr({
+			width: outerWidth,
+			height: outerHeight
+		});
+
+	d3.select(`${masterSelector} ${chartSelector}`).append('img')
+		.attr({
+			'class': 'baselayer',
+			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2.jpg'
+		});
+
+	var g = svg.append('g')
+		.attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+	var x = d3.scale.linear()
+		.range([0, width])
+		.domain([-71.1419, -71.0921]);
+
+	var y = d3.scale.linear()
+		.range([height, 0])
+		.domain([42.2823, 42.3249]);
+
+	var radius = d3.scale.sqrt()
+		.domain([0, d3.max(data, d => d.potholes)])
+		.range([0, width/30]);
+
+	log(width);
+
+	g.append('g')
+		.attr('class', 'circles')
+		.selectAll('circle')
+		.data(data)
+		.enter().append('circle')
+		.attr({
+			cx: d => x(d.lng),
+			cy: d => y(d.lat),
+			r: d => radius(d.potholes),
+			fill: colors.named.primary.orange,
+			'fill-opacity': 0.35,
+			stroke: d3.rgb(colors.named.primary.orange).darker()
+		});
+}
+
 var thingsHaveBeenDrawn = false;
 
 function resize() {
@@ -356,8 +422,7 @@ function resize() {
 	makePotholeClosuresPerDay();
 	makeYearlyIncreaseByDistrict();
 	makeWeeklyClosuresForDistrict2();
-
-	thingsHaveBeenDrawn = true;
+	makeBestDayForDistrict2();
 }
 
 $(window).on('resize', resize);

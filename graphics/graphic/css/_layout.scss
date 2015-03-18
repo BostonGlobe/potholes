@@ -25,11 +25,23 @@ $cool: #ebf3f7;
 
 		.chart {
 
+			img {
+				vertical-align: middle;
+			}
+
 			position: relative;
 			@include rhythm(0, 0, 0, 4);
 
+			.baselayer {
+				position: absolute;
+				top: 0;
+				left: 0;
+			}
+
 			svg {
-				vertical-align: bottom;
+				vertical-align: middle;
+				position: relative;
+				z-index: 1;
 			}
 
 			svg text {
