@@ -380,7 +380,7 @@ function makeBestDayForDistrict2() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'img/district2.jpg'
+			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
 		});
 
 	var g = svg.append('g')
@@ -506,27 +506,28 @@ function makeBestDayForDistrict2() {
 		.html(d => `<span>${d.name}</span>`);
 }
 
-function makeClusters(year) {
+function makeClusters() {
 
-	var chartSelector = `.clusters${year}`;
+	var chartSelector = `.clusters`;
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = 2963/2702*outerWidth;
+	var outerHeight = 1316/1200*outerWidth;
 
 	$(chartSelector, master).empty();
 
-	var allData = require('../../../data/output/clusters.csv')
+	var data = require('../../../data/output/clustersIn2014.csv')
 		.map(function(datum) {
 			return {
 				lat: +datum.LATITUDE,
 				lng: +datum.LONGITUDE,
 				potholes: +datum.n,
-				year: +datum.YEAR,
 				district: datum.district
+					.replace('Rest', 'Other districts')
+					.replace(/^(\d)/, 'District $1')
 			};
 		});
 
-	var districts = _.chain(allData)
+	var districtsAndCount = _.chain(data)
 		.pluck('district')
 		.countBy()
 		.map(function(v, i) {
@@ -537,10 +538,9 @@ function makeClusters(year) {
 		})
 		.sortBy('count')
 		.reverse()
-		.pluck('district')
 		.value();
 
-	var data = allData.filter(d => d.year === year);
+	var orderedDistricts = _.pluck(districtsAndCount, 'district');
 
 	var margin = {top: 0, right: 0, bottom: 0, left: 0};
 	var width = outerWidth - margin.left - margin.right;
@@ -555,131 +555,106 @@ function makeClusters(year) {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'img/boston.png'
+			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
 		});
 
-	var g = svg.append('g')
-		.attr('transform', `translate(${margin.left}, ${margin.top})`);
+	function makeCircles() {
+	
+		var x = d3.scale.linear()
+			.range([0, width])
+			.domain([-71.201, -70.9779]);
 
-	var x = d3.scale.linear()
-		.range([0, width])
-		.domain([-71.201, -70.9779]);
+		var y = d3.scale.linear()
+			.range([height, 0])
+			.domain([42.2211, 42.4022]);
 
-	var y = d3.scale.linear()
-		.range([height, 0])
-		.domain([42.2211, 42.4022]);
+		var radius = d3.scale.sqrt()
+			.range([0, width/30])
+			.domain([0, d3.max(data, d => d.potholes)]);
 
-	var radius = d3.scale.sqrt()
-		.domain([0, d3.max(data, d => d.potholes)])
-		.range([0, width/30]);
+		svg.append('g')
+			.attr({
+				'class': 'circles',
+				transform: `translate(${margin.left}, ${margin.top})`
+			})
+			.selectAll('circle')
+			.data(data)
+			.enter().append('circle')
+			.attr({
+				cx: d => x(d.lng),
+				cy: d => y(d.lat),
+				r: d => radius(d.potholes),
+				fill: d => colors.array.secondary[_.indexOf(orderedDistricts, d.district)],
+				'fill-opacity': 0.45,
+				stroke: d => d3.rgb(colors.array.secondary[_.indexOf(orderedDistricts, d.district)]).darker()
+			});
+	}
+	makeCircles();
 
-	// var labels = [
-	// 	{
-	// 		name: 'Jamaica Plain',
-	// 		lng: -71.1203,
-	// 		lat: 42.30985,
-	// 		rank: 1,
-	// 		dx: 0,
-	// 		dy: -1
-	// 	},
-	// 	{
-	// 		name: 'Forest Hills',
-	// 		lng: -71.112,
-	// 		lat: 42.2968,
-	// 		rank: 1,
-	// 		dx: 0,
-	// 		dy: 0
-	// 	},
-	// 	{
-	// 		name: 'Roslindale',
-	// 		lng: -71.1245,
-	// 		lat: 42.29125,
-	// 		rank: 1,
-	// 		dx: 0,
-	// 		dy: 4.5
-	// 	},
-	// 	// {
-	// 	// 	name: 'Mount Hope',
-	// 	// 	lng: -71.1245,
-	// 	// 	lat: 42.283455,
-	// 	// 	rank: 1,
-	// 	// 	dx: 0,
-	// 	// 	dy: 0
-	// 	// },
-	// 	// {
-	// 	// 	name: 'Clarendon Hills',
-	// 	// 	lng: -71.1231,
-	// 	// 	lat: 42.2751,
-	// 	// 	rank: 1,
-	// 	// 	dx: 0,
-	// 	// 	dy: 0
-	// 	// },
-	// 	{
-	// 		name: 'Roslindale Village',
-	// 		lng: -71.1303,
-	// 		lat: 42.2875,
-	// 		rank: 2,
-	// 		dx: -0,
-	// 		dy: 3
-	// 	},
-	// 	{
-	// 		name: 'Arnold Arboretum',
-	// 		lng: -71.1226,
-	// 		lat: 42.29945,
-	// 		rank: 2,
-	// 		dx: -5,
-	// 		dy: 0
-	// 	},
-	// 	{
-	// 		name: 'Olmsted Park',
-	// 		lng: -71.1187,
-	// 		lat: 42.3225,
-	// 		rank: 2,
-	// 		dx: 0,
-	// 		dy: 0
-	// 	}
-	// ];
+	function makeBars() {
 
-	g.append('g')
-		.attr('class', 'circles')
-		.selectAll('circle')
-		.data(data)
-		.enter().append('circle')
-		.attr({
-			cx: d => x(d.lng),
-			cy: d => y(d.lat),
-			r: d => radius(d.potholes),
-			fill: d => colors.array.secondary[_.indexOf(districts, d.district)],
-			'fill-opacity': 0.45,
-			stroke: d => d3.rgb(colors.array.secondary[_.indexOf(districts, d.district)]).darker()
-		});
+		var barMargin = 2;
+		var barHeight = 18 + barMargin*2;
 
-	// // g.append('g')
-	// // 	.attr('class', 'labels')
-	// // 	.selectAll('circle')
-	// // 	.data(_.filter(labels, {rank: 2}))
-	// // 	.enter().append('circle')
-	// // 	.attr({
-	// // 		cx: d => x(d.lng),
-	// // 		cy: d => y(d.lat),
-	// // 		r: 1,
-	// // 		fill: 'red'
-	// // 	});
+		var leftMargin = 200;
+		var rightMargin = 10;
+		var maxBarWidth = width - leftMargin - rightMargin;
+		var bottomMargin = rightMargin - barMargin;
 
-	d3.select(`${masterSelector} ${chartSelector}`).append('div')
-		.attr('class', 'inner-title')
-		.html(`<span>${year}</span>`);
-	// 	.selectAll('div')
-	// 	.data(labels)
-	// 	.enter().append('div')
-	// 	.attr({
-	// 		'class': d=> `label rank${d.rank}`
-	// 	})
-	// 	.style({
-	// 		left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
-	// 		top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
-	// 	})
-	// 	.html(d => `<span>${d.name}</span>`);
+		var x = d3.scale.linear()
+			.range([0, maxBarWidth])
+			.domain([0, d3.max(districtsAndCount, d => d.count)]);
+
+		var bars = svg.append('g')
+			.attr({
+				'class': 'bars',
+				transform: `translate(${leftMargin}, ${height - barHeight*districtsAndCount.length - bottomMargin})`
+			})
+			.selectAll('rect')
+			.data(districtsAndCount)
+			.enter().append('g')
+			.attr({
+				'class': 'bar',
+				transform: (d,i) => `translate(0, ${i*barHeight})`
+			});
+
+		bars.append('rect')
+			.attr({
+				width: d => x(d.count),
+				height: barHeight - barMargin*2
+			})
+			.style({
+				fill: d => colors.array.secondary[_.indexOf(orderedDistricts, d.district)]
+			});
+
+		bars.append('text')
+			.attr({
+				'class': 'name',
+				x: -7,
+				y: barHeight / 2,
+				dy: '0.25em'
+			})
+			.style({
+				'font-size': `${barHeight/2}px`,
+				'text-anchor': 'end'
+			})
+			.text(d => d.district);
+
+		bars.append('text')
+			.attr({
+				'class': 'number',
+				x: d => x(d.count),
+				y: barHeight / 2,
+				dx: '-0.25em',
+				dy: '0.25em'
+			})
+			.style({
+				'font-size': `${barHeight/2}px`,
+				'text-anchor': 'end'
+			})
+			.text(d => util.numberWithCommas(d.count));	
+	}
+	makeBars();
 }
 
 var thingsHaveBeenDrawn = false;
@@ -690,8 +665,7 @@ function resize() {
 	makeYearlyIncreaseByDistrict();
 	makeWeeklyClosuresForDistrict2();
 	makeBestDayForDistrict2();
-	makeClusters(2013);
-	makeClusters(2014);
+	makeClusters();
 }
 
 $(window).on('resize', resize);

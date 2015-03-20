@@ -133,12 +133,9 @@ $cool: #ebf3f7;
 				font-size: 10px;
 			}
 
-			&.yearlyIncreaseByDistrict {
-
-				g.bar text.number {
-					fill: white;
-					text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
-				}
+			g.bar text.number {
+				fill: white;
+				text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
 			}
 
 			.annotationMarkers line {
@@ -204,4 +201,8 @@ $cool: #ebf3f7;
 	.source-and-credit {
 		@include rhythm(4, 0, 0, 1);
 	}
+}
+
+.meter-modal-block.bg-modal--meter {
+	display: none;
 }
