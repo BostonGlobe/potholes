@@ -354,7 +354,7 @@ function makeBestDayForDistrict2() {
 	var chartSelector = '.bestDayForDistrict2';
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = 3313/1970*outerWidth;
+	var outerHeight = 2789/2282*outerWidth;
 
 	$(chartSelector, master).empty();
 
@@ -380,7 +380,7 @@ function makeBestDayForDistrict2() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'img/district2-with-labels.png'
+			'src': 'img/district2.png'
 		});
 
 	var g = svg.append('g')
@@ -388,11 +388,11 @@ function makeBestDayForDistrict2() {
 
 	var x = d3.scale.linear()
 		.range([0, width])
-		.domain([-71.1404, -71.0997]);
+		.domain([-71.1419, -71.0921]);
 
 	var y = d3.scale.linear()
 		.range([height, 0])
-		.domain([42.2734, 42.324]);
+		.domain([42.2823, 42.3249]);
 
 	var radius = d3.scale.sqrt()
 		.domain([0, d3.max(data, d => d.potholes)])
@@ -402,29 +402,67 @@ function makeBestDayForDistrict2() {
 		{
 			name: 'Jamaica Plain',
 			lng: -71.1203,
-			lat: 42.30985
-		}
-		// ,
-		// {
-		// 	name: 'Forest Hills',
-		// 	lng: -71.1404,
-		// 	lat: 42.2734
-		// },
-		// {
-		// 	name: 'Roslindale',
-		// 	lng: -71.1404,
-		// 	lat: 42.2734
-		// },
+			lat: 42.30985,
+			rank: 1,
+			dx: 0,
+			dy: -1
+		},
+		{
+			name: 'Forest Hills',
+			lng: -71.112,
+			lat: 42.2968,
+			rank: 1,
+			dx: 0,
+			dy: 0
+		},
+		{
+			name: 'Roslindale',
+			lng: -71.1245,
+			lat: 42.29125,
+			rank: 1,
+			dx: 0,
+			dy: 4.5
+		},
 		// {
 		// 	name: 'Mount Hope',
-		// 	lng: -71.1404,
-		// 	lat: 42.2734
+		// 	lng: -71.1245,
+		// 	lat: 42.283455,
+		// 	rank: 1,
+		// 	dx: 0,
+		// 	dy: 0
 		// },
 		// {
 		// 	name: 'Clarendon Hills',
-		// 	lng: -71.1404,
-		// 	lat: 42.2734
-		// }
+		// 	lng: -71.1231,
+		// 	lat: 42.2751,
+		// 	rank: 1,
+		// 	dx: 0,
+		// 	dy: 0
+		// },
+		{
+			name: 'Roslindale Village',
+			lng: -71.1303,
+			lat: 42.2875,
+			rank: 2,
+			dx: -0,
+			dy: 3
+		},
+		{
+			name: 'Arnold Arboretum',
+			lng: -71.1226,
+			lat: 42.29945,
+			rank: 2,
+			dx: -5,
+			dy: 0
+		},
+		{
+			name: 'Olmsted Park',
+			lng: -71.1187,
+			lat: 42.3225,
+			rank: 2,
+			dx: 0,
+			dy: 0
+		}
 	];
 
 	g.append('g')
@@ -436,57 +474,36 @@ function makeBestDayForDistrict2() {
 			cx: d => x(d.lng),
 			cy: d => y(d.lat),
 			r: d => radius(d.potholes),
-			fill: colors.named.primary.red,
+			fill: colors.named.primary.orange,
 			'fill-opacity': 0.35,
-			stroke: d3.rgb(colors.named.primary.red).darker()
-		});
-
-	g.append('g')
-		.attr('class', 'labels')
-		.selectAll('circle')
-		.data(labels)
-		.enter().append('circle')
-		.attr({
-			cx: d => x(d.lng),
-			cy: d => y(d.lat),
-			r: 1,
-			fill: 'red'
+			stroke: d3.rgb(colors.named.primary.orange).darker()
 		});
 
 	// g.append('g')
 	// 	.attr('class', 'labels')
-	// 	.selectAll('text')
-	// 	.data(labels)
-	// 	.enter().append('text')
+	// 	.selectAll('circle')
+	// 	.data(_.filter(labels, {rank: 2}))
+	// 	.enter().append('circle')
 	// 	.attr({
-	// 		x: d => x(d.lng),
-	// 		y: d => y(d.lat),
-	// 		dx: 6,
-	// 		dy: 6
-	// 	})
-	// 	.text(d => d.name);
+	// 		cx: d => x(d.lng),
+	// 		cy: d => y(d.lat),
+	// 		r: 1,
+	// 		fill: 'red'
+	// 	});
 
-	// d3.select(`${masterSelector} ${chartSelector}`).append('div')
-	// 	.attr('class', 'labels')
-	// 	.data([
-	// 	{
-	// 		name: 'Jamaica Plain'
-	// 	},
-	// 	{
-	// 		name: 'Forest Hills'
-	// 	},
-	// 	{
-	// 		name: 'Roslindale'
-	// 	},
-	// 	{
-	// 		name: 'Mount Hope'
-	// 	},
-	// 	{
-	// 		name: 'Clarendon Hills'
-	// 	}
-	// 	])
-	// 	.enter().append('span')
-	// 	.text(d => d.name);
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
+		.attr('class', 'labels')
+		.selectAll('div')
+		.data(labels)
+		.enter().append('div')
+		.attr({
+			'class': d=> `label rank${d.rank}`
+		})
+		.style({
+			left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
+			top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
+		})
+		.html(d => `<span>${d.name}</span>`);
 }
 
 var thingsHaveBeenDrawn = false;
