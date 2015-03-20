@@ -188,12 +188,13 @@ $cool: #ebf3f7;
 					@include rhythm(0, 0, 0, 0);
 					width: 49%;
 					float: left;
+
+					&:last-child {
+
+						float: right;
+					}
 				}
 
-				&:last-child {
-
-					float: right;
-				}
 			}
 		}
 
