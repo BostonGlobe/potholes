@@ -10,7 +10,7 @@ $cool: #ebf3f7;
 		@extend %centercolumn;
 
 		p.description {
-			@include rhythm(1, 0, 0, 0);
+			@include rhythm(3, 0, 0, 0);
 			@include adjust-leading-to(1);
 		}
 
@@ -30,12 +30,19 @@ $cool: #ebf3f7;
 			}
 
 			position: relative;
-			@include rhythm(0, 0, 0, 4);
+			@include rhythm(0, 0, 2, 0);
 
-			.baselayer {
+			.baselayer,
+			.labels {
 				position: absolute;
 				top: 0;
 				left: 0;
+			}
+
+			.labels {
+				span {
+					font-family: $sansSerif;
+				}
 			}
 
 			svg {
@@ -70,7 +77,7 @@ $cool: #ebf3f7;
 			}
 
 			path.area.fill {
-				fill: $warm;
+				fill: $neutral;
 				stroke: none;
 			}
 

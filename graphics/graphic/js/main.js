@@ -17,7 +17,7 @@ var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
 
 var annotationMarkerMargin = {
-	left: 20,
+	left: 15,
 	top: 10
 };
 
@@ -129,7 +129,7 @@ function makeYearlyIncreaseByDistrict() {
 	var data = _.chain(require('../../../data/output/yearlyIncreaseByDistrict.csv'))
 		.map(function(d) {
 			return {
-				district: d.district,
+				district: d.district.replace('Rest', 'Other 9 districts combined'),
 				increase: +d.increase
 			};
 		})
@@ -138,7 +138,7 @@ function makeYearlyIncreaseByDistrict() {
 
 	var chartSelector = '.yearlyIncreaseByDistrict';
 
-	var margin = {top: 0, right: 0, bottom: 0, left: 60};
+	var margin = {top: 0, right: 0, bottom: 0, left: 155};
 
 	var outerWidth = $(chartSelector, master).width();
 	var outerHeight = data.length * barHeight + margin.top + margin.bottom;
@@ -183,7 +183,7 @@ function makeYearlyIncreaseByDistrict() {
 	bars.append('text')
 		.attr({
 			'class': 'name',
-			x: -10,
+			x: -7,
 			y: barHeight / 2,
 			dy: '0.25em'
 		})
@@ -326,7 +326,7 @@ function makeWeeklyClosuresForDistrict2() {
 		.data(annotationPoints)
 	.enter().append('line')
 		.attr({
-			x1: d => x(d.date) + 5,
+			x1: d => x(d.date) + 3,
 			x2: d => x(d.date) + annotationMarkerMargin.left,
 			y1: d => y(d.potholes) + annotationMarkerMargin.top,
 			y2: d => y(d.potholes) + annotationMarkerMargin.top
@@ -345,7 +345,7 @@ function makeWeeklyClosuresForDistrict2() {
 			top: d => `${100 * (y(d.potholes))/y.range()[0]}%`
 		})
 		.html(function(d) {
-			return `<span class='date'>${APDateTime.date(d.date, true)}</span><span class='potholes'>${d.potholes} potholes</span>`;
+			return `<span class='date'>${APDateTime.date(d.date, true)} - 21</span><span class='potholes'>${d.potholes} potholes</span>`;
 		});
 }
 
@@ -354,7 +354,7 @@ function makeBestDayForDistrict2() {
 	var chartSelector = '.bestDayForDistrict2';
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = 2789/2411*outerWidth;
+	var outerHeight = 3313/1970*outerWidth;
 
 	$(chartSelector, master).empty();
 
@@ -380,7 +380,7 @@ function makeBestDayForDistrict2() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2.jpg'
+			'src': 'img/district2-with-labels.png'
 		});
 
 	var g = svg.append('g')
@@ -388,17 +388,44 @@ function makeBestDayForDistrict2() {
 
 	var x = d3.scale.linear()
 		.range([0, width])
-		.domain([-71.1419, -71.0921]);
+		.domain([-71.1404, -71.0997]);
 
 	var y = d3.scale.linear()
 		.range([height, 0])
-		.domain([42.2823, 42.3249]);
+		.domain([42.2734, 42.324]);
 
 	var radius = d3.scale.sqrt()
 		.domain([0, d3.max(data, d => d.potholes)])
 		.range([0, width/30]);
 
-	log(width);
+	var labels = [
+		{
+			name: 'Jamaica Plain',
+			lng: -71.1203,
+			lat: 42.30985
+		}
+		// ,
+		// {
+		// 	name: 'Forest Hills',
+		// 	lng: -71.1404,
+		// 	lat: 42.2734
+		// },
+		// {
+		// 	name: 'Roslindale',
+		// 	lng: -71.1404,
+		// 	lat: 42.2734
+		// },
+		// {
+		// 	name: 'Mount Hope',
+		// 	lng: -71.1404,
+		// 	lat: 42.2734
+		// },
+		// {
+		// 	name: 'Clarendon Hills',
+		// 	lng: -71.1404,
+		// 	lat: 42.2734
+		// }
+	];
 
 	g.append('g')
 		.attr('class', 'circles')
@@ -409,10 +436,57 @@ function makeBestDayForDistrict2() {
 			cx: d => x(d.lng),
 			cy: d => y(d.lat),
 			r: d => radius(d.potholes),
-			fill: colors.named.primary.orange,
+			fill: colors.named.primary.red,
 			'fill-opacity': 0.35,
-			stroke: d3.rgb(colors.named.primary.orange).darker()
+			stroke: d3.rgb(colors.named.primary.red).darker()
 		});
+
+	g.append('g')
+		.attr('class', 'labels')
+		.selectAll('circle')
+		.data(labels)
+		.enter().append('circle')
+		.attr({
+			cx: d => x(d.lng),
+			cy: d => y(d.lat),
+			r: 1,
+			fill: 'red'
+		});
+
+	// g.append('g')
+	// 	.attr('class', 'labels')
+	// 	.selectAll('text')
+	// 	.data(labels)
+	// 	.enter().append('text')
+	// 	.attr({
+	// 		x: d => x(d.lng),
+	// 		y: d => y(d.lat),
+	// 		dx: 6,
+	// 		dy: 6
+	// 	})
+	// 	.text(d => d.name);
+
+	// d3.select(`${masterSelector} ${chartSelector}`).append('div')
+	// 	.attr('class', 'labels')
+	// 	.data([
+	// 	{
+	// 		name: 'Jamaica Plain'
+	// 	},
+	// 	{
+	// 		name: 'Forest Hills'
+	// 	},
+	// 	{
+	// 		name: 'Roslindale'
+	// 	},
+	// 	{
+	// 		name: 'Mount Hope'
+	// 	},
+	// 	{
+	// 		name: 'Clarendon Hills'
+	// 	}
+	// 	])
+	// 	.enter().append('span')
+	// 	.text(d => d.name);
 }
 
 var thingsHaveBeenDrawn = false;

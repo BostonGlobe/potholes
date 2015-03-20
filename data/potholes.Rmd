@@ -108,8 +108,6 @@ ggplot(data, aes(DATE.CLOSED.R, n)) +
 
 data <- potholes %>%
   filter(
-#    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
-#    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
     !is.na(DATE.CLOSED.R),
     pwd_district %in% c('2', '3')
   ) %>%
@@ -130,7 +128,11 @@ data <- potholes %>%
   ungroup() %>%
   arrange(desc(n))
 
-district <- data %>% filter(pwd_district == '2')
+district <- data %>% filter(
+  pwd_district == '2',
+  LATITUDE != '42.3594',
+  LONGITUDE != '-71.0587'
+)
 map <- get_map(location=c(-71.1153, 42.29), zoom=13)
 ggmap(map) +
   geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
