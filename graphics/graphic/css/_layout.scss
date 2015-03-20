@@ -186,7 +186,7 @@ $cool: #ebf3f7;
 
 				@include breakpoint(420px) {
 					@include rhythm(0, 0, 0, 0);
-					width: 48%;
+					width: 49%;
 					float: left;
 				}
 
@@ -200,25 +200,7 @@ $cool: #ebf3f7;
 	}
 
 
-
-
-
-	// .source-and-credit {
-	// 	@include rhythm(8, 0, 0, 0);
-	// }
-
-	// .question {
-
-	// 	text-align: center;
-
-	// 	span {
-	// 		font-family: $serifSuperStrong;
-	// 		@include adjust-font-size-to($s6);
-	// 	}
-	// }
-	
-}
-
-.meter-modal-block.bg-modal--meter {
-	display: none;
+	.source-and-credit {
+		@include rhythm(4, 0, 0, 1);
+	}
 }
