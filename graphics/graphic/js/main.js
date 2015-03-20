@@ -99,6 +99,7 @@ function makePotholeClosuresPerDay() {
 		.data(annotationPoints)
 	.enter().append('line')
 		.attr({
+			'class': 'dotted',
 			x1: d => x(d.date) + 5,
 			x2: d => x(d.date) + annotationMarkerMargin.left,
 			y1: d => y(d.potholes) + annotationMarkerMargin.top,
@@ -326,6 +327,7 @@ function makeWeeklyClosuresForDistrict2() {
 		.data(annotationPoints)
 	.enter().append('line')
 		.attr({
+			'class': 'dotted',
 			x1: d => x(d.date) + 3,
 			x2: d => x(d.date) + annotationMarkerMargin.left,
 			y1: d => y(d.potholes) + annotationMarkerMargin.top,
@@ -358,14 +360,49 @@ function makeBestDayForDistrict2() {
 
 	$(chartSelector, master).empty();
 
-	var data = require('../../../data/output/bestDayForDistrict2_2014-06-20.csv')
+	var annotationData = [
+		{
+			lat: 42.2953,
+			lng: -71.1183,
+			potholes: 18,
+			text: "align right",
+			left: 0,
+			top: 63,
+			align: 'right',
+			width: 34
+		},
+		{
+			lat: 42.2852,
+			lng: -71.1152,
+			potholes: 8,
+			text: "align left",
+			left: 60,
+			top: 78,
+			align: 'left',
+			width: 38
+		}
+	];
+
+	var data = _.chain(require('../../../data/output/bestDayForDistrict2_2014-06-20.csv'))
 		.map(function(datum) {
-			return {
+
+			var result = {
 				lat: +datum.LATITUDE,
 				lng: +datum.LONGITUDE,
 				potholes: +datum.n
 			};
-		});
+
+			var match = _.find(annotationData, {
+				lat: result.lat,
+				lng: result.lng,
+				potholes: result.potholes
+			});
+
+			return match ? match : result;
+		})
+		.sortBy('potholes')
+		.reverse()
+		.value();
 
 	var margin = {top: 0, right: 0, bottom: 0, left: 0};
 	var width = outerWidth - margin.left - margin.right;
@@ -383,8 +420,11 @@ function makeBestDayForDistrict2() {
 			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
 		});
 
-	var g = svg.append('g')
-		.attr('transform', `translate(${margin.left}, ${margin.top})`);
+	var g_circles = svg.append('g')
+		.attr({
+			'class': 'circles',
+			transform: `translate(${margin.left}, ${margin.top})`
+		});
 
 	var x = d3.scale.linear()
 		.range([0, width])
@@ -396,7 +436,7 @@ function makeBestDayForDistrict2() {
 
 	var radius = d3.scale.sqrt()
 		.domain([0, d3.max(data, d => d.potholes)])
-		.range([0, width/30]);
+		.range([0, width/10]);
 
 	var labels = [
 		{
@@ -465,9 +505,7 @@ function makeBestDayForDistrict2() {
 		}
 	];
 
-	g.append('g')
-		.attr('class', 'circles')
-		.selectAll('circle')
+	g_circles.selectAll('circle')
 		.data(data)
 		.enter().append('circle')
 		.attr({
@@ -476,8 +514,11 @@ function makeBestDayForDistrict2() {
 			r: d => radius(d.potholes),
 			fill: colors.named.secondary.brick,
 			'fill-opacity': 0.45,
-			stroke: d3.rgb(colors.named.secondary.brick).darker()
-		});
+			stroke: function(d) {
+				return d.text ? 'black' : d3.rgb(colors.named.secondary.brick).darker();
+			}
+		})
+		.on('mouseover', log);
 
 	// g.append('g')
 	// 	.attr('class', 'labels')
@@ -504,6 +545,121 @@ function makeBestDayForDistrict2() {
 			top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
 		})
 		.html(d => `<span>${d.name}</span>`);
+
+	var annotationPoints = annotationData.filter(d => d.text);
+
+	var g_annotations = svg.append('g')
+		.attr({
+			'class': 'annotationMarkers',
+			transform: `translate(${margin.left}, ${margin.top})`
+		});
+
+	g_annotations
+		.selectAll('line')
+		.data(annotationPoints)
+		.enter().append('line')
+		.attr({
+			'class': 'solid',
+			x1: function(d) {
+
+				var origin = {
+					x: x(d.lng),
+					y: y(d.lat)
+				};
+
+				return origin.x;
+
+				// var labelWidth = x.range()[1]*d.width/100;
+				// var labelLeft = x.range()[1]*d.left/100;
+				// var labelRight = labelLeft + labelWidth;
+
+				// // four quadrants ?!!
+
+				// if ()
+
+				// // var WIDTH = origin.x - labelRight;
+				// // var HEIGHT = origin.y 
+
+				// var diagonal = radius(d.potholes);
+				// var DIAGONAL = Math.pow(WIDTH, 2) + Math.pow(HEIGHT, 2);
+
+
+				// var a,o,h,A,O,H;
+
+				// var width = x.range()[1]*d.width/100;
+
+				// A = d.align === 'left' ?
+				// 	x.range()[1]*d.left/100 - origin.x :
+				// 	origin.x - x.range()[1]*d.left/100 - width;
+
+				// O = origin.y - y.range()[0]*d.top/100;
+				// H = Math.sqrt(Math.pow(A, 2) + Math.pow(O, 2));
+
+				// h = radius(d.potholes);
+
+				// a = h * A / H;
+
+				// return x(d.lng) + a;
+			},
+			x2: function(d) {
+
+				var width = x.range()[1]*d.width/100;
+
+				return x.range()[1]*d.left/100 + (d.align === 'right' ? width : 0);
+			},
+			y1: function(d) {
+
+				var origin = {
+					x: x(d.lng),
+					y: y(d.lat)
+				};
+
+				return origin.y;
+
+				// var origin = {
+				// 	x: x(d.lng),
+				// 	y: y(d.lat)
+				// };
+
+				// var a,o,h,A,O,H;
+
+				// var width = x.range()[1]*d.width/100;
+
+				// A = d.align === 'left' ?
+				// 	x.range()[1]*d.left/100 - origin.x :
+				// 	origin.x - x.range()[1]*d.left/100 - width;
+
+				// O = origin.y - y.range()[0]*d.top/100;
+				// H = Math.sqrt(Math.pow(A, 2) + Math.pow(O, 2));
+
+				// h = radius(d.potholes);
+
+				// o = h * O / H;
+
+				// return y(d.lat) - o;
+			},
+			y2: function(d) {
+				return y.range()[0]*d.top/100;
+			}
+		});
+
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
+		.attr('class', 'annotations')
+		.selectAll('.annotation')
+		.data(annotationPoints)
+	.enter().append('div')
+		.attr({
+			'class': d => `annotation map ${d.align}`
+		})
+		.style({
+			left: d => `${d.left}%`,
+			top: d => `${d.top}%`,
+			'text-align': d => d.align,
+			width: d => `${d.width}%`
+		})
+		.html(function(d) {
+			return `<span class='number'>${d.potholes} potholes</span><span class='text'>${d.text}</span>`;
+		});
 }
 
 function makeClusters() {

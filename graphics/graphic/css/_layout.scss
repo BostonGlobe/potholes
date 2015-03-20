@@ -61,14 +61,14 @@ $cool: #ebf3f7;
 					@include adjust-leading-to(0);
 
 					&.rank1 span {
-						font-family: $sansSerifStrong;
-						@include adjust-font-size-to(12px);
+						font-family: $sansSerif;
+						@include adjust-font-size-to(11px);
 						@include adjust-leading-to(1);
 						display: inline-block;
 						margin-top: -1em;
 						text-transform: uppercase;
 						letter-spacing: 2px;
-						opacity: 0.75;
+						opacity: 0.5;
 						color: black;
 					}
 
@@ -139,9 +139,18 @@ $cool: #ebf3f7;
 			}
 
 			.annotationMarkers line {
-				stroke: $richBlack;
-				shape-rendering: crispEdges;
-				stroke-dasharray: 1,1;
+
+				&.dotted {
+					stroke: $richBlack;
+					shape-rendering: crispEdges;
+					stroke-dasharray: 1,1;
+				}
+
+				&.solid {
+					stroke: black;
+					opacity: 0.5;
+					stroke-dasharray: 0,0;
+				}
 			}
 
 			.annotations {
@@ -165,10 +174,30 @@ $cool: #ebf3f7;
 						display: inline-block;
 						@include adjust-font-size-to($s3, 1/2);
 
-						&.date {
+						&.date,
+						&.number {
 							font-weight: bold;
 						}
 					}
+
+					&.map {
+						padding: 0;
+						border: solid black 1px;
+						background: none;
+
+						span {
+							@include adjust-font-size-to($s3p5, 2/3);
+						}
+
+						&.left {
+							padding-left: 0.25em;
+						}
+
+						&.right {
+							padding-right: 0.25em;
+						}
+					}
+
 				}
 			}
 		}
