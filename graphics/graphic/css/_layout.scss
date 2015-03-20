@@ -51,15 +51,18 @@ $cool: #ebf3f7;
 
 					&.rank1 span {
 						font-family: $sansSerifStrong;
-						@include adjust-font-size-to(14px);
+						@include adjust-font-size-to(12px);
 						@include adjust-leading-to(1);
 						display: inline-block;
 						margin-top: -1em;
-						color: #464646;
+						text-transform: uppercase;
+						letter-spacing: 2px;
+						opacity: 0.75;
+						color: black;
 					}
 
 					&.rank2 span {
-						@include adjust-font-size-to(6px);
+						@include adjust-font-size-to(9px);
 						@include adjust-leading-to(1);
 						display: inline-block;
 						margin-top: -1em;
