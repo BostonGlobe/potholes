@@ -593,13 +593,28 @@ function makeClusters() {
 
 	function makeBars() {
 
-		var barMargin = 2;
-		var barHeight = 18 + barMargin*2;
+		var outerWidthExtent = [300, 600];
 
-		var leftMargin = 200;
-		var rightMargin = 10;
-		var maxBarWidth = width - leftMargin - rightMargin;
-		var bottomMargin = rightMargin - barMargin;
+		// Make the text size based on the outer width
+		var textScale = d3.scale.linear()
+			.range([11, 12])
+			.domain(outerWidthExtent);
+		var textSize = textScale(outerWidth);
+
+		// Make the bar margin based on text size
+		var barMargin = textSize/8;
+
+		// Make the bar height based on text size
+		var barHeight = textSize * 1.2 + barMargin*2;
+
+		// Make the top margin based on text size
+		var topMarginScale = d3.scale.linear().range([5, 15]).domain(outerWidthExtent);
+		var topMargin = topMarginScale(outerWidth);
+
+		var leftMarginScale = d3.scale.linear().range([80, 100]).domain(outerWidthExtent);
+		var leftMargin = leftMarginScale(outerWidth);
+
+		var maxBarWidth = width*0.55 - leftMargin;
 
 		var x = d3.scale.linear()
 			.range([0, maxBarWidth])
@@ -608,7 +623,7 @@ function makeClusters() {
 		var bars = svg.append('g')
 			.attr({
 				'class': 'bars',
-				transform: `translate(${leftMargin}, ${height - barHeight*districtsAndCount.length - bottomMargin})`
+				transform: `translate(${leftMargin}, ${topMargin})`
 			})
 			.selectAll('rect')
 			.data(districtsAndCount)
@@ -631,11 +646,10 @@ function makeClusters() {
 			.attr({
 				'class': 'name',
 				x: -7,
-				y: barHeight / 2,
-				dy: '0.25em'
+				y: textSize
 			})
 			.style({
-				'font-size': `${barHeight/2}px`,
+				'font-size': `${textSize}px`,
 				'text-anchor': 'end'
 			})
 			.text(d => d.district);
@@ -644,17 +658,17 @@ function makeClusters() {
 			.attr({
 				'class': 'number',
 				x: d => x(d.count),
-				y: barHeight / 2,
-				dx: '-0.25em',
-				dy: '0.25em'
+				y: textSize,
+				dx: '-0.25em'
 			})
 			.style({
-				'font-size': `${barHeight/2}px`,
+				'font-size': `${textSize}px`,
 				'text-anchor': 'end'
 			})
 			.text(d => util.numberWithCommas(d.count));	
 	}
 	makeBars();
+
 }
 
 var thingsHaveBeenDrawn = false;
