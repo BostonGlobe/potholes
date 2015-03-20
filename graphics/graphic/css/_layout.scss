@@ -33,10 +33,21 @@ $cool: #ebf3f7;
 			@include rhythm(0, 0, 0, 6);
 
 			.baselayer,
-			.labels {
+			.labels,
+			.inner-title {
 				position: absolute;
 				top: 0;
 				left: 0;
+			}
+
+			.inner-title {
+
+				@include rhythm(0, 1/4, 0, 0);
+				padding-left: 0.5em;
+
+				span {
+					font-family: $sansSerifStrong;
+				}
 			}
 
 			.labels {
@@ -84,6 +95,10 @@ $cool: #ebf3f7;
 
 			rect {
 				shape-rendering: crispEdges;
+			}
+
+			circle {
+				stroke-width: 0.75px;
 			}
 
 			.x.axis path,
@@ -160,6 +175,28 @@ $cool: #ebf3f7;
 				}
 			}
 		}
+
+		.small-multiples {
+			width: 100%;
+			overflow: hidden;
+
+			.chart {
+
+				@include rhythm(0, 0, 0, 1);
+
+				@include breakpoint(420px) {
+					@include rhythm(0, 0, 0, 0);
+					width: 48%;
+					float: left;
+				}
+
+				&:last-child {
+
+					float: right;
+				}
+			}
+		}
+
 	}
 
 

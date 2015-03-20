@@ -354,7 +354,7 @@ function makeBestDayForDistrict2() {
 	var chartSelector = '.bestDayForDistrict2';
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = 2789/2282*outerWidth;
+	var outerHeight = 1464/1200*outerWidth;
 
 	$(chartSelector, master).empty();
 
@@ -380,7 +380,7 @@ function makeBestDayForDistrict2() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'img/district2.png'
+			'src': 'img/district2.jpg'
 		});
 
 	var g = svg.append('g')
@@ -474,9 +474,9 @@ function makeBestDayForDistrict2() {
 			cx: d => x(d.lng),
 			cy: d => y(d.lat),
 			r: d => radius(d.potholes),
-			fill: colors.named.primary.orange,
-			'fill-opacity': 0.35,
-			stroke: d3.rgb(colors.named.primary.orange).darker()
+			fill: colors.named.secondary.brick,
+			'fill-opacity': 0.45,
+			stroke: d3.rgb(colors.named.secondary.brick).darker()
 		});
 
 	// g.append('g')
@@ -506,6 +506,182 @@ function makeBestDayForDistrict2() {
 		.html(d => `<span>${d.name}</span>`);
 }
 
+function makeClusters(year) {
+
+	var chartSelector = `.clusters${year}`;
+
+	var outerWidth = $(chartSelector, master).width();
+	var outerHeight = 2963/2702*outerWidth;
+
+	$(chartSelector, master).empty();
+
+	var allData = require('../../../data/output/clusters.csv')
+		.map(function(datum) {
+			return {
+				lat: +datum.LATITUDE,
+				lng: +datum.LONGITUDE,
+				potholes: +datum.n,
+				year: +datum.YEAR,
+				district: datum.district
+			};
+		});
+
+	var districts = _.chain(allData)
+		.pluck('district')
+		.countBy()
+		.map(function(v, i) {
+			return {
+				district: i,
+				count: v
+			};
+		})
+		.sortBy('count')
+		.reverse()
+		.pluck('district')
+		.value();
+
+	var data = allData.filter(d => d.year === year);
+
+	var margin = {top: 0, right: 0, bottom: 0, left: 0};
+	var width = outerWidth - margin.left - margin.right;
+	var height = outerHeight - margin.top - margin.bottom;
+
+	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
+		.attr({
+			width: outerWidth,
+			height: outerHeight
+		});
+
+	d3.select(`${masterSelector} ${chartSelector}`).append('img')
+		.attr({
+			'class': 'baselayer',
+			'src': 'img/boston.png'
+		});
+
+	var g = svg.append('g')
+		.attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+	var x = d3.scale.linear()
+		.range([0, width])
+		.domain([-71.201, -70.9779]);
+
+	var y = d3.scale.linear()
+		.range([height, 0])
+		.domain([42.2211, 42.4022]);
+
+	var radius = d3.scale.sqrt()
+		.domain([0, d3.max(data, d => d.potholes)])
+		.range([0, width/30]);
+
+	// var labels = [
+	// 	{
+	// 		name: 'Jamaica Plain',
+	// 		lng: -71.1203,
+	// 		lat: 42.30985,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: -1
+	// 	},
+	// 	{
+	// 		name: 'Forest Hills',
+	// 		lng: -71.112,
+	// 		lat: 42.2968,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: 0
+	// 	},
+	// 	{
+	// 		name: 'Roslindale',
+	// 		lng: -71.1245,
+	// 		lat: 42.29125,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: 4.5
+	// 	},
+	// 	// {
+	// 	// 	name: 'Mount Hope',
+	// 	// 	lng: -71.1245,
+	// 	// 	lat: 42.283455,
+	// 	// 	rank: 1,
+	// 	// 	dx: 0,
+	// 	// 	dy: 0
+	// 	// },
+	// 	// {
+	// 	// 	name: 'Clarendon Hills',
+	// 	// 	lng: -71.1231,
+	// 	// 	lat: 42.2751,
+	// 	// 	rank: 1,
+	// 	// 	dx: 0,
+	// 	// 	dy: 0
+	// 	// },
+	// 	{
+	// 		name: 'Roslindale Village',
+	// 		lng: -71.1303,
+	// 		lat: 42.2875,
+	// 		rank: 2,
+	// 		dx: -0,
+	// 		dy: 3
+	// 	},
+	// 	{
+	// 		name: 'Arnold Arboretum',
+	// 		lng: -71.1226,
+	// 		lat: 42.29945,
+	// 		rank: 2,
+	// 		dx: -5,
+	// 		dy: 0
+	// 	},
+	// 	{
+	// 		name: 'Olmsted Park',
+	// 		lng: -71.1187,
+	// 		lat: 42.3225,
+	// 		rank: 2,
+	// 		dx: 0,
+	// 		dy: 0
+	// 	}
+	// ];
+
+	g.append('g')
+		.attr('class', 'circles')
+		.selectAll('circle')
+		.data(data)
+		.enter().append('circle')
+		.attr({
+			cx: d => x(d.lng),
+			cy: d => y(d.lat),
+			r: d => radius(d.potholes),
+			fill: d => colors.array.secondary[_.indexOf(districts, d.district)],
+			'fill-opacity': 0.45,
+			stroke: d => d3.rgb(colors.array.secondary[_.indexOf(districts, d.district)]).darker()
+		});
+
+	// // g.append('g')
+	// // 	.attr('class', 'labels')
+	// // 	.selectAll('circle')
+	// // 	.data(_.filter(labels, {rank: 2}))
+	// // 	.enter().append('circle')
+	// // 	.attr({
+	// // 		cx: d => x(d.lng),
+	// // 		cy: d => y(d.lat),
+	// // 		r: 1,
+	// // 		fill: 'red'
+	// // 	});
+
+	d3.select(`${masterSelector} ${chartSelector}`).append('div')
+		.attr('class', 'inner-title')
+		.html(`<span>${year}</span>`);
+	// 	.selectAll('div')
+	// 	.data(labels)
+	// 	.enter().append('div')
+	// 	.attr({
+	// 		'class': d=> `label rank${d.rank}`
+	// 	})
+	// 	.style({
+	// 		left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
+	// 		top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
+	// 	})
+	// 	.html(d => `<span>${d.name}</span>`);
+}
+
 var thingsHaveBeenDrawn = false;
 
 function resize() {
@@ -514,6 +690,8 @@ function resize() {
 	makeYearlyIncreaseByDistrict();
 	makeWeeklyClosuresForDistrict2();
 	makeBestDayForDistrict2();
+	makeClusters(2013);
+	makeClusters(2014);
 }
 
 $(window).on('resize', resize);
