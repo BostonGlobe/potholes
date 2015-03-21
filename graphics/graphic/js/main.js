@@ -9,8 +9,29 @@ function log(s) {
 	console.log(JSON.stringify(s, null, 4));
 }
 
-function moveToFront(element) {
-	element.parentNode.insertBefore(element, element.parentNode.firstChild);
+function getCoords(d, x, y, radius) {
+
+	var origin = {
+		x: x(d.lng),
+		y: y(d.lat)
+	};
+
+	var width = x.range()[1]*d.annotation.width/100;
+
+	var coords = {
+		x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
+		x2: origin.x,
+		y1: y.range()[0]*d.annotation.top/100,
+		y2: origin.y
+	};
+
+	var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
+	var diff = h - radius(d.potholes);
+
+	coords.h = h;
+	coords.diff = diff;
+
+	return coords;
 }
 
 var masterSelector = '.igraphic-graphic.graphic';
@@ -363,19 +384,30 @@ function makeBestDayForDistrict2() {
 	var annotationData = [
 		{
 			row: 1,
-			text: 'Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			text: 'Row 1 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
 			left: 0,
-			top: 63,
+			top: 69.5,
 			align: 'right',
-			width: 34
+			width: 34,
+			topOffset: -5
 		},
 		{
-			row: 8,
-			text: 'Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
+			row: 5,
+			text: 'Row 8 Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
 			left: 60,
 			top: 78,
 			align: 'left',
-			width: 38
+			width: 38,
+			topOffset: -10
+		},
+		{
+			row: 20,
+			text: 'Row 20 Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
+			left: 8,
+			top: 24.2,
+			align: 'right',
+			width: 38,
+			topOffset: -5
 		}
 	];
 
@@ -397,7 +429,6 @@ function makeBestDayForDistrict2() {
 
 			return result;
 		})
-		.sortBy('potholes')
 		.reverse()
 		.value();
 
@@ -460,22 +491,6 @@ function makeBestDayForDistrict2() {
 			dx: 0,
 			dy: 4.5
 		},
-		// {
-		// 	name: 'Mount Hope',
-		// 	lng: -71.1245,
-		// 	lat: 42.283455,
-		// 	rank: 1,
-		// 	dx: 0,
-		// 	dy: 0
-		// },
-		// {
-		// 	name: 'Clarendon Hills',
-		// 	lng: -71.1231,
-		// 	lat: 42.2751,
-		// 	rank: 1,
-		// 	dx: 0,
-		// 	dy: 0
-		// },
 		{
 			name: 'Roslindale Village',
 			lng: -71.1303,
@@ -509,11 +524,11 @@ function makeBestDayForDistrict2() {
 			cx: d => x(d.lng),
 			cy: d => y(d.lat),
 			r: d => radius(d.potholes),
+		})
+		.style({
 			fill: colors.named.secondary.brick,
 			'fill-opacity': 0.45,
-			stroke: function(d) {
-				return d.text ? 'black' : d3.rgb(colors.named.secondary.brick).darker();
-			}
+			stroke: d3.rgb(colors.named.secondary.brick).darker()
 		})
 		.on('mouseover', log);
 
@@ -539,44 +554,19 @@ function makeBestDayForDistrict2() {
 			transform: `translate(${margin.left}, ${margin.top})`
 		});
 
-	function getCoords(d) {
-
-		var origin = {
-			x: x(d.lng),
-			y: y(d.lat)
-		};
-
-		var width = x.range()[1]*d.annotation.width/100;
-
-		var coords = {
-			x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
-			x2: origin.x,
-			y1: y.range()[0]*d.annotation.top/100,
-			y2: origin.y
-		};
-
-		var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
-		var diff = h - radius(d.potholes);
-
-		coords.h = h;
-		coords.diff = diff;
-
-		return coords;
-	}
-
 	g_annotations.selectAll('line')
 		.data(annotationPoints)
 		.enter().append('line')
 		.attr({
 			'class': 'solid',
-			x1: d => getCoords(d).x1,
-			x2: d => getCoords(d).x2,
-			y1: d => getCoords(d).y1,
-			y2: d => getCoords(d).y2
+			x1: d => getCoords(d, x, y, radius).x1,
+			x2: d => getCoords(d, x, y, radius).x2,
+			y1: d => getCoords(d, x, y, radius).y1,
+			y2: d => getCoords(d, x, y, radius).y2
 		})
 		.style({
 			'stroke-dasharray': function(d) {
-				var coords = getCoords(d);
+				var coords = getCoords(d, x, y, radius);
 				var stroke = `${coords.diff},${coords.h}`;
 				return stroke;
 			}
@@ -594,7 +584,8 @@ function makeBestDayForDistrict2() {
 			left: d => `${d.annotation.left}%`,
 			top: d => `${d.annotation.top}%`,
 			'text-align': d => d.annotation.align,
-			width: d => `${d.annotation.width}%`
+			width: d => `${d.annotation.width}%`,
+			'margin-top': d => d.annotation.topOffset ? `${d.annotation.topOffset}%` : 0
 		})
 		.html(function(d) {
 			return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
@@ -610,17 +601,60 @@ function makeClusters() {
 
 	$(chartSelector, master).empty();
 
+	var annotationData = [
+		{
+			row: 1,
+			text: 'Row 1 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			left: 0,
+			top: 42,
+			align: 'right',
+			width: 33,
+			topOffset: -10
+		},
+		{
+			row: 13,
+			text: 'Row 13 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			left: 68.7,
+			top: 58,
+			align: 'left',
+			width: 33,
+			topOffset: 0,
+			leftOffset: -10
+		},
+		{
+			row: 35,
+			text: 'Row 35 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			left: 67,
+			top: 18,
+			align: 'left',
+			width: 30,
+			topOffset: -10,
+			leftOffset: 0
+		}
+	];
+
 	var data = require('../../../data/output/clustersIn2014.csv')
 		.map(function(datum) {
-			return {
+
+			var result = {
 				lat: +datum.LATITUDE,
 				lng: +datum.LONGITUDE,
 				potholes: +datum.n,
+				row: +datum.row,
 				district: datum.district
 					.replace('Rest', 'Other districts')
 					.replace(/^(\d)/, 'District $1')
 			};
-		});
+
+			var match = _.find(annotationData, {row: result.row});
+
+			if (match) {
+				result.annotation = match;
+			}
+
+			return result;
+		})
+		.reverse();
 
 	var districtsAndCount = _.chain(data)
 		.pluck('district')
@@ -650,7 +684,8 @@ function makeClusters() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
+			// 'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
+			'src': 'img/boston_1200w.jpg'
 		});
 
 	function makeCircles() {
@@ -682,6 +717,126 @@ function makeClusters() {
 				fill: d => colors.array.secondary[_.indexOf(orderedDistricts, d.district)],
 				'fill-opacity': 0.45,
 				stroke: d => d3.rgb(colors.array.secondary[_.indexOf(orderedDistricts, d.district)]).darker()
+			})
+			.on('mouseover', log);
+
+		var labels = [
+			{
+				name: 'Chelsea',
+				lng: -71.033,
+				lat: 42.392,
+				rank: 1,
+				dx: -6,
+				dy: 0
+			},
+			{
+				name: 'Quincy',
+				lng: -71.002,
+				lat: 42.253,
+				rank: 1,
+				dx: -4,
+				dy: 0
+			},
+			{
+				name: 'Milton',
+				lng: -71.066,
+				lat: 42.25,
+				rank: 1,
+				dx: -5,
+				dy: 0
+			},
+			{
+				name: 'Dedham',
+				lng: -71.166,
+				lat: 42.242,
+				rank: 1,
+				dx: -6,
+				dy: 0
+			},
+			{
+				name: 'Watertown',
+				lng: -71.183,
+				lat: 42.371,
+				rank: 1,
+				dx: -8,
+				dy: 4
+			},
+			{
+				name: 'Brookline',
+				lng: -71.121,
+				lat: 42.332,
+				rank: 1,
+				dx: -15,
+				dy: 0
+			},
+			{
+				name: 'Cambridge',
+				lng: -71.106,
+				lat: 42.375,
+				rank: 1,
+				dx: -7,
+				dy: 4
+			}
+		];
+
+		d3.select(`${masterSelector} ${chartSelector}`).append('div')
+			.attr('class', 'labels')
+			.selectAll('div')
+			.data(labels)
+			.enter().append('div')
+			.attr({
+				'class': d=> `light label rank${d.rank}`
+			})
+			.style({
+				left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
+				top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
+			})
+			.html(d => `<span>${d.name}</span>`);
+
+			var annotationPoints = data.filter(d => d.annotation);
+
+			var g_annotations = svg.append('g')
+				.attr({
+					'class': 'annotationMarkers',
+					transform: `translate(${margin.left}, ${margin.top})`
+				});
+
+		g_annotations.selectAll('line')
+			.data(annotationPoints)
+			.enter().append('line')
+			.attr({
+				'class': 'solid',
+				x1: d => getCoords(d, x, y, radius).x1,
+				x2: d => getCoords(d, x, y, radius).x2,
+				y1: d => getCoords(d, x, y, radius).y1,
+				y2: d => getCoords(d, x, y, radius).y2
+			})
+			.style({
+				'stroke-dasharray': function(d) {
+					var coords = getCoords(d, x, y, radius);
+					var stroke = `${coords.diff},${coords.h}`;
+					return stroke;
+				}
+			});
+
+		d3.select(`${masterSelector} ${chartSelector}`).append('div')
+			.attr('class', 'annotations')
+			.selectAll('.annotation')
+			.data(annotationPoints)
+		.enter().append('div')
+			.attr({
+				'class': d => `annotation map ${d.annotation.align}`
+			})
+			.style({
+				left: d => `${d.annotation.left}%`,
+				top: d => `${d.annotation.top}%`,
+				'text-align': d => d.annotation.align,
+				width: d => `${d.annotation.width}%`,
+				'margin-left': d => d.annotation.leftOffset ? `${d.annotation.leftOffset}%` : 0,
+				'margin-top': d => d.annotation.topOffset ? `${d.annotation.topOffset}%` : 0
+			})
+			.html(function(d) {
+				return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
 			});
 	}
 	makeCircles();
@@ -760,13 +915,11 @@ function makeClusters() {
 				'font-size': `${textSize}px`,
 				'text-anchor': 'end'
 			})
-			.text(d => util.numberWithCommas(d.count));	
+			.text((d,i) => `${util.numberWithCommas(d.count)}${!i ? ' clusters': ''}`);
 	}
 	makeBars();
 
 }
-
-var thingsHaveBeenDrawn = false;
 
 function resize() {
 
