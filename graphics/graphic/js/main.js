@@ -57,7 +57,7 @@ function makePotholeClosuresPerDay() {
 		{
 			date: '2013-03-14',
 			annotation: {
-				text: 'Highest day in Menino’s final year in office.',
+				text: '. Highest day in Menino’s final year in office.',
 				goRight: true,
 				width: '4em'
 			}
@@ -65,7 +65,7 @@ function makePotholeClosuresPerDay() {
 		{
 			date: '2014-01-30',
 			annotation: {
-				text: 'Highest day in 2014.',
+				text: '. Highest day in 2014.',
 				goRight: true,
 				width: '6em'
 			}
@@ -73,7 +73,7 @@ function makePotholeClosuresPerDay() {
 		{
 			date: '2014-01-06',
 			annotation: {
-				text: 'Walsh takes office.',
+				text: '. Walsh takes office.',
 				width: '4em'
 			}
 		}
@@ -95,14 +95,6 @@ function makePotholeClosuresPerDay() {
 
 			return result;
 		});
-
-	var test = _.chain(data)
-		.filter(d => d.date.getFullYear() === 2013)
-		.sortBy('potholes')
-		.reverse()
-		.value();
-
-	log(test);
 
 	var margin = {top: 30, right: 0, bottom: 15, left: 0};
 	var width = outerWidth - margin.left - margin.right;
@@ -156,8 +148,6 @@ function makePotholeClosuresPerDay() {
 
 	var annotationPoints = data.filter(d => d.annotation);
 
-	log(annotationPoints);
-
 	var g_annotations = svg.append('g')
 		.attr({
 			'class': 'annotationMarkers',
@@ -199,7 +189,7 @@ function makePotholeClosuresPerDay() {
 			width: d => d.annotation.width || 'auto'
 		})
 		.html(function(d) {
-			return `<div><span class='date'>${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes. ${d.annotation.text}</span></div>`;
+			return `<div><span class='date'>${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes${d.annotation.text}</span></div>`;
 		});
 }
 
@@ -294,20 +284,48 @@ function makeWeeklyClosuresForDistrict2() {
 	var chartSelector = '.weeklyClosuresForDistrict2';
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = outerWidth/3;
+	var outerHeight = Math.min(outerWidth/2, 150);
 
 	$(chartSelector, master).empty();
+
+	var annotationData = [
+		{
+			date: '2014-06-15',
+			annotation: {
+				text: '. Highest week in 2014.',
+				goRight: true,
+				width: '5em'
+			}
+		},
+		{
+			date: '2014-03-30',
+			annotation: {
+				text: ', including 47 on a single day in a city-owned parking lot.',
+				width: '9em'
+			}
+		}
+	];
 
 	var parseDate = d3.time.format('%Y-%m-%d').parse;
 	var data = require('../../../data/output/weeklyClosuresForDistrict2.csv')
 		.map(function(datum) {
-			return {
+
+			var result = {
 				date: parseDate(datum.WEEK),
 				potholes: +datum.n
 			};
+
+			var match = _.find(annotationData, {date: datum.WEEK});
+
+			if (match) {
+				result.annotation = match.annotation;
+			}
+
+			return result;
+
 		});
 
-	var margin = {top: 0, right: 0, bottom: 15, left: 0};
+	var margin = {top: 30, right: 0, bottom: 15, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
@@ -397,21 +415,33 @@ function makeWeeklyClosuresForDistrict2() {
 		.attr('class', 'area stroke')
 		.attr('d', line);
 
-	var annotationPoints = _.chain(data).sortBy('potholes').reverse().take(1).value();
+	var annotationPoints = data.filter(d => d.annotation);
 
-	g.append('g')
+	var g_annotations = svg.append('g')
 		.attr({
-			'class': 'annotationMarkers'
+			'class': 'annotationMarkers',
+			transform: `translate(${margin.left}, ${margin.top})`
 		})
 		.selectAll('.annotationMarker')
 		.data(annotationPoints)
-	.enter().append('line')
+	.enter().append('g');
+
+	g_annotations.append('line')
 		.attr({
 			'class': 'dotted',
-			x1: d => x(d.date) + 3,
-			x2: d => x(d.date) + annotationMarkerMargin.left,
-			y1: d => y(d.potholes) + annotationMarkerMargin.top,
-			y2: d => y(d.potholes) + annotationMarkerMargin.top
+			x1: d => x(d.date),
+			x2: d => x(d.date),
+			y1: d => y(d.potholes) - margin.top/2,
+			y2: -1*margin.top + 2
+		});
+
+	g_annotations.append('line')
+		.attr({
+			'class': 'dotted',
+			x1: d => x(d.date),
+			x2: d => x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left,
+			y1: -1*margin.top + 2,
+			y2: -1*margin.top + 2
 		});
 
 	d3.select(`${masterSelector} ${chartSelector}`).append('div')
@@ -420,14 +450,15 @@ function makeWeeklyClosuresForDistrict2() {
 		.data(annotationPoints)
 	.enter().append('div')
 		.attr({
-			'class': 'annotation'
+			'class': d => `annotation ${d.annotation.goRight ? '' : 'goLeft'}`
 		})
 		.style({
-			left: d => `${100 * (x(d.date) + annotationMarkerMargin.left)/x.range()[1]}%`,
-			top: d => `${100 * (y(d.potholes))/y.range()[0]}%`
+			left: d => `${100 * (x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left)/x.range()[1]}%`,
+			top: d => 0,
+			width: d => d.annotation.width || 'auto'
 		})
 		.html(function(d) {
-			return `<div><span class='date'>${APDateTime.date(d.date, true)} - 21</span></div><div><span class='potholes'>${d.potholes} potholes</span></div>`;
+			return `<div><span class='date'>Week of ${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes${d.annotation.text}</span></div>`;
 		});
 }
 
