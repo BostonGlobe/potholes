@@ -38,7 +38,7 @@ var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
 
 var annotationMarkerMargin = {
-	left: 15,
+	left: 5,
 	top: 10
 };
 
@@ -47,20 +47,64 @@ function makePotholeClosuresPerDay() {
 	var chartSelector = '.potholeClosuresPerDay';
 
 	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = outerWidth/3;
+	var outerHeight = Math.min(outerWidth/2, 150);
 
 	$(chartSelector, master).empty();
 
 	var parseDate = d3.time.format('%Y-%m-%d').parse;
+
+	var annotationData = [
+		{
+			date: '2013-03-14',
+			annotation: {
+				text: 'Highest day in Menino’s final year in office.',
+				goRight: true,
+				width: '4em'
+			}
+		},
+		{
+			date: '2014-01-30',
+			annotation: {
+				text: 'Highest day in 2014.',
+				goRight: true,
+				width: '6em'
+			}
+		},
+		{
+			date: '2014-01-06',
+			annotation: {
+				text: 'Walsh takes office.',
+				width: '4em'
+			}
+		}
+	];
+
 	var data = require('../../../data/output/potholeClosuresPerDay.csv')
 		.map(function(datum) {
-			return {
+
+			var result = {
 				date: parseDate(datum['DATE.CLOSED.R']),
 				potholes: +datum.closures
 			};
+
+			var match = _.find(annotationData, {date: datum['DATE.CLOSED.R']});
+
+			if (match) {
+				result.annotation = match.annotation;
+			}
+
+			return result;
 		});
 
-	var margin = {top: 0, right: 0, bottom: 15, left: 0};
+	var test = _.chain(data)
+		.filter(d => d.date.getFullYear() === 2013)
+		.sortBy('potholes')
+		.reverse()
+		.value();
+
+	log(test);
+
+	var margin = {top: 30, right: 0, bottom: 15, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
@@ -110,21 +154,35 @@ function makePotholeClosuresPerDay() {
 			x: 3
 		});
 
-	var annotationPoints = _.chain(data).sortBy('potholes').reverse().take(1).value();
+	var annotationPoints = data.filter(d => d.annotation);
 
-	g.append('g')
+	log(annotationPoints);
+
+	var g_annotations = svg.append('g')
 		.attr({
-			'class': 'annotationMarkers'
+			'class': 'annotationMarkers',
+			transform: `translate(${margin.left}, ${margin.top})`
 		})
 		.selectAll('.annotationMarker')
 		.data(annotationPoints)
-	.enter().append('line')
+	.enter().append('g');
+
+	g_annotations.append('line')
 		.attr({
 			'class': 'dotted',
-			x1: d => x(d.date) + 5,
-			x2: d => x(d.date) + annotationMarkerMargin.left,
-			y1: d => y(d.potholes) + annotationMarkerMargin.top,
-			y2: d => y(d.potholes) + annotationMarkerMargin.top
+			x1: d => x(d.date),
+			x2: d => x(d.date),
+			y1: d => y(d.potholes) - margin.top/2,
+			y2: -1*margin.top + 2
+		});
+
+	g_annotations.append('line')
+		.attr({
+			'class': 'dotted',
+			x1: d => x(d.date),
+			x2: d => x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left,
+			y1: -1*margin.top + 2,
+			y2: -1*margin.top + 2
 		});
 
 	d3.select(`${masterSelector} ${chartSelector}`).append('div')
@@ -133,14 +191,15 @@ function makePotholeClosuresPerDay() {
 		.data(annotationPoints)
 	.enter().append('div')
 		.attr({
-			'class': 'annotation'
+			'class': d => `annotation ${d.annotation.goRight ? '' : 'goLeft'}`
 		})
 		.style({
-			left: d => `${100 * (x(d.date) + annotationMarkerMargin.left)/x.range()[1]}%`,
-			top: d => `${100 * (y(d.potholes))/y.range()[0]}%`
+			left: d => `${100 * (x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left)/x.range()[1]}%`,
+			top: d => 0,
+			width: d => d.annotation.width || 'auto'
 		})
 		.html(function(d) {
-			return `<div><span class='date'>${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes</span></div>`;
+			return `<div><span class='date'>${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes. ${d.annotation.text}</span></div>`;
 		});
 }
 
