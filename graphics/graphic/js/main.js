@@ -119,7 +119,7 @@ function makePotholeClosuresPerDay() {
 			top: d => `${100 * (y(d.potholes))/y.range()[0]}%`
 		})
 		.html(function(d) {
-			return `<span class='date'>${APDateTime.date(d.date, true)}</span><span class='potholes'>${d.potholes} potholes</span>`;
+			return `<div><span class='date'>${APDateTime.date(d.date, true)}</span></div><div><span class='potholes'>${d.potholes} potholes</span></div>`;
 		});
 }
 
@@ -347,7 +347,7 @@ function makeWeeklyClosuresForDistrict2() {
 			top: d => `${100 * (y(d.potholes))/y.range()[0]}%`
 		})
 		.html(function(d) {
-			return `<span class='date'>${APDateTime.date(d.date, true)} - 21</span><span class='potholes'>${d.potholes} potholes</span>`;
+			return `<div><span class='date'>${APDateTime.date(d.date, true)} - 21</span></div><div><span class='potholes'>${d.potholes} potholes</span></div>`;
 		});
 }
 
@@ -362,20 +362,16 @@ function makeBestDayForDistrict2() {
 
 	var annotationData = [
 		{
-			lat: 42.2953,
-			lng: -71.1183,
-			potholes: 18,
-			text: "align right",
+			row: 1,
+			text: 'Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
 			left: 0,
 			top: 63,
 			align: 'right',
 			width: 34
 		},
 		{
-			lat: 42.2852,
-			lng: -71.1152,
-			potholes: 8,
-			text: "align left",
+			row: 8,
+			text: 'Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
 			left: 60,
 			top: 78,
 			align: 'left',
@@ -389,16 +385,17 @@ function makeBestDayForDistrict2() {
 			var result = {
 				lat: +datum.LATITUDE,
 				lng: +datum.LONGITUDE,
-				potholes: +datum.n
+				potholes: +datum.n,
+				row: +datum.row
 			};
 
-			var match = _.find(annotationData, {
-				lat: result.lat,
-				lng: result.lng,
-				potholes: result.potholes
-			});
+			var match = _.find(annotationData, {row: result.row});
 
-			return match ? match : result;
+			if (match) {
+				result.annotation = match;
+			}
+
+			return result;
 		})
 		.sortBy('potholes')
 		.reverse()
@@ -417,7 +414,7 @@ function makeBestDayForDistrict2() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
+			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
 		});
 
 	var g_circles = svg.append('g')
@@ -436,7 +433,7 @@ function makeBestDayForDistrict2() {
 
 	var radius = d3.scale.sqrt()
 		.domain([0, d3.max(data, d => d.potholes)])
-		.range([0, width/10]);
+		.range([0, width/30]);
 
 	var labels = [
 		{
@@ -520,18 +517,6 @@ function makeBestDayForDistrict2() {
 		})
 		.on('mouseover', log);
 
-	// g.append('g')
-	// 	.attr('class', 'labels')
-	// 	.selectAll('circle')
-	// 	.data(_.filter(labels, {rank: 2}))
-	// 	.enter().append('circle')
-	// 	.attr({
-	// 		cx: d => x(d.lng),
-	// 		cy: d => y(d.lat),
-	// 		r: 1,
-	// 		fill: 'red'
-	// 	});
-
 	d3.select(`${masterSelector} ${chartSelector}`).append('div')
 		.attr('class', 'labels')
 		.selectAll('div')
@@ -546,7 +531,7 @@ function makeBestDayForDistrict2() {
 		})
 		.html(d => `<span>${d.name}</span>`);
 
-	var annotationPoints = annotationData.filter(d => d.text);
+	var annotationPoints = data.filter(d => d.annotation);
 
 	var g_annotations = svg.append('g')
 		.attr({
@@ -554,92 +539,46 @@ function makeBestDayForDistrict2() {
 			transform: `translate(${margin.left}, ${margin.top})`
 		});
 
-	g_annotations
-		.selectAll('line')
+	function getCoords(d) {
+
+		var origin = {
+			x: x(d.lng),
+			y: y(d.lat)
+		};
+
+		var width = x.range()[1]*d.annotation.width/100;
+
+		var coords = {
+			x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
+			x2: origin.x,
+			y1: y.range()[0]*d.annotation.top/100,
+			y2: origin.y
+		};
+
+		var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
+		var diff = h - radius(d.potholes);
+
+		coords.h = h;
+		coords.diff = diff;
+
+		return coords;
+	}
+
+	g_annotations.selectAll('line')
 		.data(annotationPoints)
 		.enter().append('line')
 		.attr({
 			'class': 'solid',
-			x1: function(d) {
-
-				var origin = {
-					x: x(d.lng),
-					y: y(d.lat)
-				};
-
-				return origin.x;
-
-				// var labelWidth = x.range()[1]*d.width/100;
-				// var labelLeft = x.range()[1]*d.left/100;
-				// var labelRight = labelLeft + labelWidth;
-
-				// // four quadrants ?!!
-
-				// if ()
-
-				// // var WIDTH = origin.x - labelRight;
-				// // var HEIGHT = origin.y 
-
-				// var diagonal = radius(d.potholes);
-				// var DIAGONAL = Math.pow(WIDTH, 2) + Math.pow(HEIGHT, 2);
-
-
-				// var a,o,h,A,O,H;
-
-				// var width = x.range()[1]*d.width/100;
-
-				// A = d.align === 'left' ?
-				// 	x.range()[1]*d.left/100 - origin.x :
-				// 	origin.x - x.range()[1]*d.left/100 - width;
-
-				// O = origin.y - y.range()[0]*d.top/100;
-				// H = Math.sqrt(Math.pow(A, 2) + Math.pow(O, 2));
-
-				// h = radius(d.potholes);
-
-				// a = h * A / H;
-
-				// return x(d.lng) + a;
-			},
-			x2: function(d) {
-
-				var width = x.range()[1]*d.width/100;
-
-				return x.range()[1]*d.left/100 + (d.align === 'right' ? width : 0);
-			},
-			y1: function(d) {
-
-				var origin = {
-					x: x(d.lng),
-					y: y(d.lat)
-				};
-
-				return origin.y;
-
-				// var origin = {
-				// 	x: x(d.lng),
-				// 	y: y(d.lat)
-				// };
-
-				// var a,o,h,A,O,H;
-
-				// var width = x.range()[1]*d.width/100;
-
-				// A = d.align === 'left' ?
-				// 	x.range()[1]*d.left/100 - origin.x :
-				// 	origin.x - x.range()[1]*d.left/100 - width;
-
-				// O = origin.y - y.range()[0]*d.top/100;
-				// H = Math.sqrt(Math.pow(A, 2) + Math.pow(O, 2));
-
-				// h = radius(d.potholes);
-
-				// o = h * O / H;
-
-				// return y(d.lat) - o;
-			},
-			y2: function(d) {
-				return y.range()[0]*d.top/100;
+			x1: d => getCoords(d).x1,
+			x2: d => getCoords(d).x2,
+			y1: d => getCoords(d).y1,
+			y2: d => getCoords(d).y2
+		})
+		.style({
+			'stroke-dasharray': function(d) {
+				var coords = getCoords(d);
+				var stroke = `${coords.diff},${coords.h}`;
+				return stroke;
 			}
 		});
 
@@ -649,16 +588,16 @@ function makeBestDayForDistrict2() {
 		.data(annotationPoints)
 	.enter().append('div')
 		.attr({
-			'class': d => `annotation map ${d.align}`
+			'class': d => `annotation map ${d.annotation.align}`
 		})
 		.style({
-			left: d => `${d.left}%`,
-			top: d => `${d.top}%`,
-			'text-align': d => d.align,
-			width: d => `${d.width}%`
+			left: d => `${d.annotation.left}%`,
+			top: d => `${d.annotation.top}%`,
+			'text-align': d => d.annotation.align,
+			width: d => `${d.annotation.width}%`
 		})
 		.html(function(d) {
-			return `<span class='number'>${d.potholes} potholes</span><span class='text'>${d.text}</span>`;
+			return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
 		});
 }
 
@@ -711,7 +650,7 @@ function makeClusters() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			'src': 'http://private.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
+			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
 		});
 
 	function makeCircles() {
