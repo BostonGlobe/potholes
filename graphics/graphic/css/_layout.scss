@@ -10,13 +10,14 @@ $cool: #ebf3f7;
 		@extend %centercolumn;
 
 		p.description {
-			@include rhythm(3, 0, 0, 0);
+			@include rhythm(0, 0, 0, 1);
 			@include adjust-leading-to(1);
 		}
 
 		.chart-title {
+			text-align: center;
 
-			@include rhythm(1, 0, 0, 1/2);
+			@include rhythm(2, 0, 0, 1/2);
 
 			span {
 				font-family: $sansSerifStrong;
@@ -30,7 +31,7 @@ $cool: #ebf3f7;
 			}
 
 			position: relative;
-			@include rhythm(0, 0, 0, 6);
+			@include rhythm(0, 0, 0, 5);
 
 			.baselayer,
 			.labels,

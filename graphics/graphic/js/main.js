@@ -118,14 +118,45 @@ function makePotholeClosuresPerDay() {
 		.domain([0, d3.max(data, d => d.potholes)]);
 
 	var area = d3.svg.area()
-	    .x(d => x(d.date))
-	    .y0(height)
-	    .y1(d => y(d.potholes));
+		.x(d => x(d.date))
+		.y0(height)
+		.y1(d => y(d.potholes));
+
+	// g.append('defs')
+	// .append('mask')
+	// 	.attr({
+	// 		id: 'mask1',
+	// 		x: 0,
+	// 		y: 0,
+	// 		width: width,
+	// 		height: height
+	// 	})
+	// .append('rect')
+	// 	.attr({
+	// 		x: 0,
+	// 		y: 0,
+	// 		width: 0,
+	// 		height: height
+	// 	})
+	// 	.style({
+	// 		fill: 'white'
+	// 	})
+	// 	.transition()
+	// 	.duration(3000)
+	// 	.ease('quad-in-out')
+	// 	.attr({
+	// 		width: width
+	// 	});
 
 	g.append('path')
 		.datum(data)
-		.attr('class', 'area')
-		.attr('d', area);
+		.attr({
+			'class': 'area',
+			d: area
+		});
+		// .style({
+		// 	// mask: 'url(#mask1)'
+		// });
 
 	var xAxis = d3.svg.axis()
 		.scale(x)
@@ -347,13 +378,13 @@ function makeWeeklyClosuresForDistrict2() {
 		.domain([0, d3.max(data, d => d.potholes)]);
 
 	var area = d3.svg.area()
-	    .x(d => x(d.date))
-	    .y0(height)
-	    .y1(d => y(d.potholes));
+		.x(d => x(d.date))
+		.y0(height)
+		.y1(d => y(d.potholes));
 
     var line = d3.svg.line()
     	.x(d => x(d.date))
-	    .y(d => y(d.potholes));
+		.y(d => y(d.potholes));
 
 	var xAxis = d3.svg.axis()
 		.scale(x)
@@ -474,7 +505,7 @@ function makeBestDayForDistrict2() {
 	var annotationData = [
 		{
 			row: 1,
-			text: 'Row 1 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			text: 'Intersection of Washington Street and Franklin Place',
 			left: 0,
 			top: 69.5,
 			align: 'right',
@@ -483,16 +514,16 @@ function makeBestDayForDistrict2() {
 		},
 		{
 			row: 5,
-			text: 'Row 8 Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
+			text: 'Despite being a private street, crews repeatedly patch Stella Road off Hyde Park Avenue. It is worn through to the dirt in many places.',
 			left: 60,
-			top: 78,
+			top: 77,
 			align: 'left',
 			width: 38,
 			topOffset: -10
 		},
 		{
 			row: 20,
-			text: 'Row 20 Lorem ipsum Culpa in in Ut laboris nostrud laboris et pariatur ut in sunt nostrud esse laborum.',
+			text: 'Intersection of Centre Street and Pond Street',
 			left: 8,
 			top: 24.2,
 			align: 'right',
@@ -694,26 +725,26 @@ function makeClusters() {
 	var annotationData = [
 		{
 			row: 1,
-			text: 'Row 1 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
-			left: 0,
-			top: 42,
+			text: 'City-owned parking lot patched on April 3. “I think [47] is reasonable,” paver Scott Shea said, when asked about his work. “It’s a good-sized lot. Have you been in there when there are no cars?”',
+			left: 1,
+			top: 40,
 			align: 'right',
-			width: 33,
+			width: 32,
 			topOffset: -10
 		},
 		{
 			row: 13,
-			text: 'Row 13 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
-			left: 68.7,
-			top: 58,
+			text: 'One of several clusters District 3 patched on January 13, totalling over 60 potholes on tree-lined Grampian Way along Savin Hill Park.',
+			left: 69,
+			top: 60,
 			align: 'left',
-			width: 33,
+			width: 40,
 			topOffset: 0,
-			leftOffset: -10
+			leftOffset: -12
 		},
 		{
 			row: 35,
-			text: 'Row 35 Lorem ipsum Eu adipisicing proident voluptate dolor dolore veniam Ut.',
+			text: 'District 4 fixed 11 potholes on July 5, 2013 at this Chinatown location, and 17 in the exact same spot on July 5, 2014.',
 			left: 67,
 			top: 18,
 			align: 'left',
@@ -774,8 +805,7 @@ function makeClusters() {
 	d3.select(`${masterSelector} ${chartSelector}`).append('img')
 		.attr({
 			'class': 'baselayer',
-			// 'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
-			'src': 'img/boston_1200w.jpg'
+			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
 		});
 
 	function makeCircles() {
