@@ -122,41 +122,12 @@ function makePotholeClosuresPerDay() {
 		.y0(height)
 		.y1(d => y(d.potholes));
 
-	// g.append('defs')
-	// .append('mask')
-	// 	.attr({
-	// 		id: 'mask1',
-	// 		x: 0,
-	// 		y: 0,
-	// 		width: width,
-	// 		height: height
-	// 	})
-	// .append('rect')
-	// 	.attr({
-	// 		x: 0,
-	// 		y: 0,
-	// 		width: 0,
-	// 		height: height
-	// 	})
-	// 	.style({
-	// 		fill: 'white'
-	// 	})
-	// 	.transition()
-	// 	.duration(3000)
-	// 	.ease('quad-in-out')
-	// 	.attr({
-	// 		width: width
-	// 	});
-
 	g.append('path')
 		.datum(data)
 		.attr({
 			'class': 'area',
 			d: area
 		});
-		// .style({
-		// 	// mask: 'url(#mask1)'
-		// });
 
 	var xAxis = d3.svg.axis()
 		.scale(x)
