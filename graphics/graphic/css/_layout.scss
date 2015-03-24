@@ -126,11 +126,13 @@ $cool: #ebf3f7;
 			path.area.fill {
 				fill: $neutral;
 				stroke: none;
+				shape-rendering: crispEdges;
 			}
 
 			path.area.stroke {
 				fill: none;
 				stroke: black;
+				shape-rendering: crispEdges;
 			}
 
 			.axis text {
@@ -149,7 +151,7 @@ $cool: #ebf3f7;
 					// stroke: $richBlack;
 					// stroke: red;
 					shape-rendering: crispEdges;
-					// stroke-dasharray: 1,1;
+					stroke-dasharray: 4,2;
 					opacity: 0.5;
 					stroke: black;
 				}

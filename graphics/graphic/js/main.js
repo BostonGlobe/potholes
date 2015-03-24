@@ -117,16 +117,15 @@ function makePotholeClosuresPerDay() {
 		.range([height, 0])
 		.domain([0, d3.max(data, d => d.potholes)]);
 
-	var area = d3.svg.area()
-		.x(d => x(d.date))
-		.y0(height)
-		.y1(d => y(d.potholes));
-
-	g.append('path')
-		.datum(data)
+	g.append('g')
+		.selectAll('rect')
+		.data(data)
+		.enter().append('rect')
 		.attr({
-			'class': 'area',
-			d: area
+			x: d => x(d.date),
+			y: d => y(d.potholes),
+			width: x.range()[1]/data.length,
+			height: d => height - y(d.potholes)
 		});
 
 	var xAxis = d3.svg.axis()
@@ -162,19 +161,26 @@ function makePotholeClosuresPerDay() {
 	g_annotations.append('line')
 		.attr({
 			'class': 'dotted',
-			x1: d => x(d.date),
-			x2: d => x(d.date),
-			y1: d => y(d.potholes) - margin.top/2,
+			x1: d => x(d.date) + x.range()[1]/data.length/2,
+			x2: d => x(d.date) + x.range()[1]/data.length/2,
+			y1: d => y(d.potholes),
 			y2: -1*margin.top + 2
 		});
 
 	g_annotations.append('line')
 		.attr({
 			'class': 'dotted',
-			x1: d => x(d.date),
-			x2: d => x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left,
+			x1: d => x(d.date) + x.range()[1]/data.length/2,
+			x2: d => x(d.date) + x.range()[1]/data.length/2 + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left,
 			y1: -1*margin.top + 2,
 			y2: -1*margin.top + 2
+		});
+
+	g_annotations.append('circle')
+		.attr({
+			cx: d => x(d.date) + x.range()[1]/data.length/2,
+			cy: d => y(d.potholes),
+			r: 2
 		});
 
 	d3.select(`${masterSelector} ${chartSelector}`).append('div')
@@ -186,7 +192,7 @@ function makePotholeClosuresPerDay() {
 			'class': d => `annotation ${d.annotation.goRight ? '' : 'goLeft'}`
 		})
 		.style({
-			left: d => `${100 * (x(d.date) + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left)/x.range()[1]}%`,
+			left: d => `${100 * (x(d.date) + x.range()[1]/data.length/2 + (d.annotation.goRight ? 1 : -1)*annotationMarkerMargin.left)/x.range()[1]}%`,
 			top: d => 0,
 			width: d => d.annotation.width || 'auto'
 		})
@@ -351,11 +357,13 @@ function makeWeeklyClosuresForDistrict2() {
 	var area = d3.svg.area()
 		.x(d => x(d.date))
 		.y0(height)
-		.y1(d => y(d.potholes));
+		.y1(d => y(d.potholes))
+		.interpolate('step');
 
     var line = d3.svg.line()
     	.x(d => x(d.date))
-		.y(d => y(d.potholes));
+		.y(d => y(d.potholes))
+		.interpolate('step');
 
 	var xAxis = d3.svg.axis()
 		.scale(x)
@@ -433,7 +441,7 @@ function makeWeeklyClosuresForDistrict2() {
 			'class': 'dotted',
 			x1: d => x(d.date),
 			x2: d => x(d.date),
-			y1: d => y(d.potholes) - margin.top/2,
+			y1: d => y(d.potholes),
 			y2: -1*margin.top + 2
 		});
 
