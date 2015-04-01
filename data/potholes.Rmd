@@ -7,44 +7,61 @@ output:
 ---
 
 ```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE}
-library(leaflet)
 library(stringr)
 library(lubridate)
-library(rgdal)
+#library(rgdal)
 library(dplyr)
 library(ggplot2)
 library(scales)
 library(ggmap)
-library(zoo)
+#library(zoo)
 ```
 
 ```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE, cache=TRUE}
-# Read csv.
-rawdata <- read.csv('../potholes.csv', strip.white=T, stringsAsFactors=F, row.names = NULL)
-
-# Fix invalid dates in raw data.
-potholes <- rbind(
-  rawdata %>% filter(nchar(CLOSED_DT) > 0) %>% mutate(DATE.CLOSED.R = mdy(CLOSED_DT)),
-  rawdata %>% filter(nchar(CLOSED_DT) == 0) %>% mutate(DATE.CLOSED.R = mdy(Date.Closed))
-)
+rawdata <- read.csv('../potholes.csv', strip.white=TRUE, stringsAsFactors=FALSE, row.names=NULL)
 ```
 
 A note on the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
 
-***
-#### In his most recent State of the City speech, Mayor Walsh claimed that the city "filled over 19,000 potholes - 50% more than in 2013." Let's look at the data. How many potholes were closed per year?
+****
+#### Before we begin: our data has `r I(nrow(rawdata))` rows and `r I(ncol(rawdata))` columns.
+
+****
+## Universal assumptions (meaning they apply to all following graphics)
+- There are two "date closed" columns, **CLOSED_DT** and **Date.Closed**. Not all rows have valid entries for both columns. Since we need one master "date closed" column, we'll have to use **CLOSED_DT** unless blank, in which case we'll use **Date.Closed**.
+```{r, echo=FALSE, results='hide', warning=FALSE, message=FALSE, cache=TRUE}
+# Get a list of rows with valid CLOSED_DT data,
+# and use it to create a new column, DATE.CLOSED.R.
+closed_dt_rows <- rawdata %>%
+  filter(nchar(CLOSED_DT) > 0) %>%
+  mutate(DATE.CLOSED.R = mdy(CLOSED_DT))
+
+# Get a list of rows with invalid CLOSED_DT data,
+# and use Date.Closed to create a new column, DATE.CLOSED.R.
+date.closed_rows <- rawdata %>%
+  filter(nchar(CLOSED_DT) == 0) %>%
+  mutate(DATE.CLOSED.R = mdy(Date.Closed))
+
+# Merge all rows together.
+potholes <- rbind(
+  closed_dt_rows,
+  date.closed_rows
+)
+```
+
+****
+#### How many potholes were closed per year?
 ```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
-data <- potholes %>%
+potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
   mutate(YEAR = year(DATE.CLOSED.R)) %>%
   group_by(YEAR) %>%
-  summarise(POTHOLES = n())
-
-knitr::kable(data)
+  summarise(POTHOLES = n()) %>%
+  knitr::kable()
 ```
 
-***
-#### That's a `r I(data[2,]$POTHOLES * 100 / data[1,]$POTHOLES) - 100`% increase. What does this look like over time?
+****
+#### What does this look like over time?
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
 data <- potholes %>%
   filter(!is.na(DATE.CLOSED.R)) %>%
@@ -52,171 +69,26 @@ data <- potholes %>%
   group_by(DATE.CLOSED.R) %>%
   summarise(closures = n())
 
-ggplot(data, aes(DATE.CLOSED.R, closures)) +
-  geom_area() +
-  ggtitle('Daily pothole closures') +
-  xlab('Date') +
-  ylab('Pothole closures per day')
-
 write.csv(data, file='output/potholeClosuresPerDay.csv', row.names=FALSE)
+
+ggplot(data, aes(DATE.CLOSED.R, closures)) +
+  geom_bar(stat='identity') +
+  ggtitle('Daily pothole tally') +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
 ```
 
-***
-#### Let's do a 30-day moving average.
+****
+#### Which districts are contributing to the increase in pothole closures?
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(!is.na(DATE.CLOSED.R)) %>%
-  arrange(DATE.CLOSED.R) %>%
-  group_by(DATE.CLOSED.R) %>%
-  tally() %>%
-  ungroup() %>%
-  mutate(moving = rollmean(n, 30, align='center', na.pad=TRUE)) %>%
-  filter(!is.na(moving))
-
-ggplot(data, aes(DATE.CLOSED.R, moving)) +
-  geom_area() +
-  ggtitle('Daily pothole closures (30-day rolling mean)') +
-  xlab('Date') +
-  ylab('Pothole closures per day')
-```
-
-***
-#### This clearly shows much higher activity in 2014 compared to the previous year. What does the data look like by district and source of complaint?
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=12, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R),
-    pwd_district != ''
-  ) %>%
-  arrange(DATE.CLOSED.R) %>%
-  group_by(DATE.CLOSED.R, pwd_district, Source) %>%
-  tally() %>%
-  group_by(pwd_district, Source) %>%
-  ungroup()
-
-ggplot(data, aes(DATE.CLOSED.R, n)) +
-  geom_area() +
-  facet_grid(pwd_district ~ Source) +
-  ggtitle('Daily pothole closures by district and source') +
-  xlab('Date') +
-  ylab('Pothole closures per day')
-```
-
-***
-#### This shows that District 2 fixed over 100 potholes in one day, and District 3 fixed over 500 potholes in one day, and just for Employee Generated complaints! Maybe all those potholes are located on the same spot?
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
-
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R),
-    pwd_district %in% c('2', '3')
-  ) %>%
-  arrange(DATE.CLOSED.R) %>%
-  group_by(DATE.CLOSED.R, pwd_district) %>%
-  tally() %>%
-  group_by(pwd_district) %>%
-  slice(which.max(n)) %>%
-  inner_join(potholes, by=c('DATE.CLOSED.R', 'pwd_district')) %>%
-  select(
-    LATITUDE,
-    LONGITUDE,
-    pwd_district,
-    DATE.CLOSED.R
-  ) %>%
-  group_by(LATITUDE, LONGITUDE, pwd_district, DATE.CLOSED.R) %>%
-  tally() %>%
-  ungroup() %>%
-  arrange(desc(n))
-
-district <- data %>% filter(
-  pwd_district == '2',
-  LATITUDE != '42.3594',
-  LONGITUDE != '-71.0587'
-)
-map <- get_map(location=c(-71.1153, 42.29), zoom=13)
-ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
-  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=district) +
-  ggtitle(str_c('District ', unique(district$pwd_district), ' fixed all these potholes (', sum(district$n), ') on ', unique(district$DATE.CLOSED.R))) +
-  scale_size_area(max_size=20)
-
-csv <- district %>%
-  select(LATITUDE,LONGITUDE,n)
-
-write.csv(csv, str_c('output/bestDayForDistrict', unique(district$pwd_district),'_', unique(district$DATE.CLOSED.R), '.csv'), row.names = FALSE)
-
-district <- data %>% filter(pwd_district == '3')
-map <- get_map(location=c(min(district$LONGITUDE), min(district$LATITUDE), max(district$LONGITUDE), max(district$LATITUDE)), zoom=14)
-ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour=pwd_district), data=district) +
-  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=district) +
-  ggtitle(str_c('District 3 fixed all these potholes (516) in one day')) +
-  scale_size_area(max_size=20)
-```
-
-***
-#### Show me clusters of 15 or more potholes fixed on the same day by district 2.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
-data <- potholes %>%
-  filter(
-    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
-    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
-    pwd_district == '2'
-  ) %>%
-  group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, pwd_district) %>%
-  tally() %>%
-  ungroup() %>%
-  filter(n >= 15)
-
-map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=13)
-ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05, colour='red'), data=data) +
-  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data, colour='red') +
-  ggtitle(str_c('Clusters of 15 or more daily pothole closures by district 2')) +
-  scale_size_area(max_size=10)
-
-leaflet(data) %>%
-  addTiles('http://{s}.tiles.mapbox.com/v3/gabriel-florit.e222ba6f/{z}/{x}/{y}.png') %>%
-  addCircles(lat = ~ LATITUDE, lng = ~ LONGITUDE, radius = ~(n*5), color='red', weight=1, opacity=1)
-```
-
-***
-#### Show the busiest day of the year.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
-data <- potholes %>%
-  group_by(DATE.CLOSED.R) %>%
-  tally() %>%
-  ungroup() %>%
-  slice(which.max(n)) %>%
-  inner_join(potholes, by=c('DATE.CLOSED.R')) %>%
-  group_by(LONGITUDE, LATITUDE, DATE.CLOSED.R) %>%
-  summarise(count = n()) %>%
-  ungroup() %>%
-  arrange(desc(count))
-
-csv <- data %>%
-  select(-DATE.CLOSED.R)
-
-write.csv(csv, file='output/maxDailyPotholeClosures.csv', row.names=FALSE)
-
-map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
-ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=count, alpha=0.05, colour='red'), data=data) +
-  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=count), data=data) +
-  ggtitle(str_c('All these potholes were fixed on ', data[1,]$DATE.CLOSED.R)) +
-  scale_size_area(max_size=15)
-```
-
-***
-#### Which districts are contributing to this 50% increase?
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
-
 data <- rbind(
   (potholes %>%
-    filter(pwd_district %in% c('2')) %>%
+    filter(pwd_district == '2') %>%
     mutate(district = 'District 2')),
   (potholes %>%
-    filter(!(pwd_district %in% c('2'))) %>%
+    filter(pwd_district != '2') %>%
     mutate(district = 'Rest'))) %>%
   mutate(YEAR = year(DATE.CLOSED.R)) %>%
   filter(!is.na(YEAR)) %>%
@@ -228,6 +100,7 @@ write.csv(data, 'output/yearlyIncreaseByDistrict.csv', row.names = FALSE)
 
 ggplot(data, aes(x=district, y=increase, fill=district)) +
   geom_bar(stat='identity') +
+  geom_text(aes(label=increase), hjust=1) +
   ylab('potholes fixed') +
   xlab(NULL) +
   theme(
@@ -238,10 +111,82 @@ ggplot(data, aes(x=district, y=increase, fill=district)) +
   ggtitle('2014 increase over 2013, by district')
 ```
 
-***
-#### Show me clusters of 15 or more potholes fixed on the same day for all districts by year.
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+****
+#### Let's look at district 2 potholes filled per week.
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
+data <- potholes %>%
+  filter(
+    !is.na(DATE.CLOSED.R),
+    pwd_district == '2'
+  ) %>%
+  transmute(WEEK = floor_date(DATE.CLOSED.R, 'week')) %>%
+  arrange(WEEK) %>%
+  group_by(WEEK) %>%
+  tally()
 
+write.csv(data, 'output/weeklyClosuresForDistrict2.csv', row.names = FALSE)
+
+ggplot(data, aes(WEEK, n)) +
+  geom_bar(stat='identity') +
+  ggtitle('Weekly pothole closures for district 2') +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )
+```
+
+****
+#### Let's look at District 2's top day of filling potholes.
+## Graphic-specific assumptions
+- We will ignore potholes located at (-71.0587,42.3594), which is City Hall. 
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
+district <- 2
+
+data <- potholes %>%
+  filter(
+    !is.na(DATE.CLOSED.R),
+    pwd_district == district,
+    LONGITUDE != -71.0587,
+    LATITUDE != 42.3594
+  ) %>%
+  arrange(DATE.CLOSED.R) %>%
+  group_by(DATE.CLOSED.R, pwd_district) %>%
+  tally() %>%
+  group_by(pwd_district) %>%
+  slice(which.max(n)) %>%
+  inner_join(potholes, by=c('DATE.CLOSED.R', 'pwd_district')) %>%
+  filter(
+    LONGITUDE != -71.0587,
+    LATITUDE != 42.3594
+  ) %>%
+  select(
+    LATITUDE,
+    LONGITUDE,
+    DATE.CLOSED.R
+  ) %>%
+  group_by(LATITUDE, LONGITUDE, DATE.CLOSED.R) %>%
+  tally() %>%
+  ungroup() %>%
+  arrange(desc(n))
+
+csv <- data %>%
+  select(LATITUDE,LONGITUDE,n)
+
+write.csv(csv, str_c('output/bestDayForDistrict', district, '_', unique(data$DATE.CLOSED.R), '.csv'), row.names = FALSE)
+
+map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=13)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  scale_size_area(max_size=20) +
+  ggtitle(str_c('District ', district, ' fixed ', sum(data$n), ' potholes in ', nrow(data) , ' locations on ', unique(data$DATE.CLOSED.R)))
+```
+
+****
+#### Show me clusters of 15 or more potholes fixed on the same day for all districts for 2014.
+## Graphic-specific assumptions
+- We will ignore potholes located at (-71.0587,42.3594), which is City Hall. 
+```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50, dev='jpeg'}
 data <- rbind(
   (potholes %>%
     filter(pwd_district %in% c('2', '3')) %>%
@@ -252,7 +197,6 @@ data <- rbind(
   select(-pwd_district) %>%
   filter(
     LATITUDE!=42.3594, LONGITUDE!=-71.0587,
-    LATITUDE!=42.3601, LONGITUDE!=-71.0579,
     year(DATE.CLOSED.R) == 2014
   ) %>%
   group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, district) %>%
@@ -265,99 +209,34 @@ write.csv(data, 'output/clustersIn2014.csv', row.names = FALSE)
 
 map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
 ggmap(map) +
-  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05), data=data) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05,color=district), data=data) +
   geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
-  ggtitle(str_c('Clusters of 15 or more daily pothole closures')) +
-  scale_size_area(max_size=10)
+  ggtitle(str_c(nrow(data), ' single-day clusters')) +
+  scale_size_area(max_size=15)
 ```
 
-***
-```{r, results='asis', out.width='910px', fig.width=10, fig.height=7, warning=FALSE, message=FALSE, dpi=50}
-
-count <- potholes %>%
-  group_by(DATE.CLOSED.R, pwd_district) %>%
-  summarise(potholes = n())
-
-locations <- potholes %>%
-  group_by(DATE.CLOSED.R, pwd_district, LATITUDE, LONGITUDE) %>%
-  tally() %>%
-  group_by(DATE.CLOSED.R, pwd_district) %>%
-  summarise(locations = n())
-
-data <- count %>%
-  inner_join(locations, by=c('DATE.CLOSED.R', 'pwd_district')) %>%
-  ungroup() %>%
-  arrange(desc(potholes))
-
-ggplot(data, aes(locations, potholes)) +
-  geom_point() +
-  ggtitle('The more locations a crew visits, the more potholes they will fix')
-
-ggplot(data, aes(locations)) +
-  geom_histogram(binwidth=1) +
-  ggtitle(str_c('Crews visit an average of ', median(data$locations), ' locations per day'))
-```
-
-***
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R),
-    pwd_district == '2'
-  ) %>%
-  transmute(WEEK = floor_date(DATE.CLOSED.R, 'week')) %>%
-  arrange(WEEK) %>%
-  group_by(WEEK) %>%
-  tally()
+clusters <- data %>%
+  group_by(district) %>%
+  summarise(count = n())
 
-ggplot(data, aes(WEEK, n)) +
-  geom_area() +
-  ggtitle('Weekly pothole closures for district 2') +
-  xlab('Date') +
-  ylab('Pothole closures per week')
-
-write.csv(data, 'output/weeklyClosuresForDistrict2.csv', row.names = FALSE)
+ggplot(clusters, aes(x=district, y=count, fill=district)) +
+  geom_bar(stat='identity') +
+  geom_text(aes(label=count), hjust=1) +
+  theme(
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  coord_flip() +
+  ggtitle(str_c(nrow(data), ' single-day clusters'))
 ```
 
-***
+****
+#### In the above map, what district fixed the cluster near Chinatown, and did they took care of the same location previously?
 ```{r, results='asis', out.width='910px', fig.width=10, fig.height=2, warning=FALSE, message=FALSE, dpi=50}
-data <- potholes %>%
-  filter(
-    !is.na(DATE.CLOSED.R)
-  ) %>%
-  transmute(WEEK = floor_date(DATE.CLOSED.R, 'week')) %>%
-  arrange(WEEK) %>%
-  group_by(WEEK) %>%
-  tally()
-
-ggplot(data, aes(WEEK, n)) +
-  geom_area() +
-  ggtitle('Weekly pothole closures') +
-  xlab('Date') +
-  ylab('Pothole closures per week')
-
-write.csv(data, file='output/potholeClosuresPerWeek.csv', row.names=FALSE)
-```
-
-***
-```{r, results='asis', fig.width=10, fig.height=6, warning=FALSE, message=FALSE}
-
-data <- potholes %>%
-  filter(
-    year(DATE.CLOSED.R) == 2014,
-    !grepl('invalid', CLOSURE_REASON, ignore.case=TRUE),
-    !grepl('duplicate', CLOSURE_REASON, ignore.case=TRUE)
-  ) %>%
-  group_by(CLOSURE_REASON) %>%
+potholes %>%
+  filter(LATITUDE == 42.3520, LONGITUDE == -71.0615) %>%
+  group_by(LATITUDE, LONGITUDE, pwd_district, DATE.CLOSED.R) %>%
   tally() %>%
-  arrange(desc(n))
-
-head(data)
-
-
+  knitr::kable()
 ```
-
-
-
-
-
