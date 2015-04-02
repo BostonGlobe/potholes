@@ -25,7 +25,7 @@
 	},
 	{
 		"row": 13,
-        "html": "<span class='text'>A District 3 crew patched <span class='inline-title'>22 potholes</span> on Grampian Way on January 13. That day over 60 potholes were filled on the street.</span>",
+        "html": "<span class='text'>A District 3 crew patched <span class='inline-title'>22 potholes</span> in the same area on Grampian Way on January 13. That day over 60 potholes were filled on the street.</span>",
         "breakpoints": {
             "1": {
                 "width": 75,
