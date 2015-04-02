@@ -1,0 +1,57 @@
+[
+	{
+		"row": 1,
+		"text": "Intersection of Washington Street and Franklin Place",
+        "breakpoints": {
+            "1": {
+            	"flip": true,
+                "width": 90,
+                "dx": -50,
+                "dy": -20
+            },
+            "460": {
+            	"flip": true,
+                "width": 150,
+                "dx": -50,
+                "dy": -20
+            }
+        }
+	},
+	{
+		"row": 5,
+		"text": "Stella Road is a private way worn through to dirt in many places. Abutting property owners are responsible for fixing the road, but the city often patches potholes on the street, which is off Hyde Park Avenue.",
+        "breakpoints": {
+            "1": {
+                "width": 120,
+                "dx": 20,
+                "dy": -150
+            },
+            "460": {
+                "width": 160,
+                "dx": 30,
+                "dy": -90
+            },
+            "600": {
+                "width": 200,
+                "dx": 30,
+                "dy": -70
+            }
+        }
+	},
+	{
+		"row": 20,
+		"text": "Intersection of Centre Street and Pond Street",
+        "breakpoints": {
+            "1": {
+                "width": 90,
+                "dx": 20,
+                "dy": -20
+            },
+            "460": {
+                "width": 90,
+                "dx": 40,
+                "dy": -20
+            }
+        }
+	}
+]

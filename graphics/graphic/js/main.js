@@ -11,48 +11,30 @@ function log(s) {
 	console.log(JSON.stringify(s, null, 4));
 }
 
-	// g_annotations.selectAll('line')
-	// 	.data(annotationPoints)
-	// 	.enter().append('line')
-	// 	.attr({
-	// 		'class': 'solid',
-	// 		x1: d => getCoords(d, x, y, radius).x1,
-	// 		x2: d => getCoords(d, x, y, radius).x2,
-	// 		y1: d => getCoords(d, x, y, radius).y1,
-	// 		y2: d => getCoords(d, x, y, radius).y2
-	// 	})
-	// 	.style({
-	// 		'stroke-dasharray': function(d) {
-	// 			var coords = getCoords(d, x, y, radius);
-	// 			var stroke = `${coords.diff},${coords.h}`;
-	// 			return stroke;
-	// 		}
-	// 	});
+// function getCoords(d, x, y, radius) {
 
-function getCoords(d, x, y, radius) {
+// 	var origin = {
+// 		x: x(d.lng),
+// 		y: y(d.lat)
+// 	};
 
-	var origin = {
-		x: x(d.lng),
-		y: y(d.lat)
-	};
+// 	var width = x.range()[1]*d.annotation.width/100;
 
-	var width = x.range()[1]*d.annotation.width/100;
+// 	var coords = {
+// 		x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
+// 		x2: origin.x,
+// 		y1: y.range()[0]*d.annotation.top/100,
+// 		y2: origin.y
+// 	};
 
-	var coords = {
-		x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
-		x2: origin.x,
-		y1: y.range()[0]*d.annotation.top/100,
-		y2: origin.y
-	};
+// 	var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
+// 	var diff = h - radius(d.potholes);
 
-	var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
-	var diff = h - radius(d.potholes);
+// 	coords.h = h;
+// 	coords.diff = diff;
 
-	coords.h = h;
-	coords.diff = diff;
-
-	return coords;
-}
+// 	return coords;
+// }
 
 var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
@@ -516,63 +498,7 @@ function makeBestDayForDistrict2() {
 		.empty()
 		.html(skeleton);
 
-	var annotationData = [
-		{
-			row: 1,
-			text: 'Intersection of Washington Street and Franklin Place',
-            "breakpoints": {
-                "1": {
-                	"flip": true,
-                    "width": 90,
-                    "dx": -50,
-                    "dy": -20
-                },
-                "460": {
-                	"flip": true,
-                    "width": 150,
-                    "dx": -50,
-                    "dy": -20
-                }
-            }
-		},
-		{
-			row: 5,
-			text: 'Stella Road is a private way worn through to dirt in many places. Abutting property owners are responsible for fixing the road, but the city often patches potholes on the street, which is off Hyde Park Avenue.',
-            "breakpoints": {
-                "1": {
-                    "width": 120,
-                    "dx": 20,
-                    "dy": -150
-                },
-                "460": {
-                    "width": 160,
-                    "dx": 30,
-                    "dy": -90
-                },
-                "600": {
-                    "width": 200,
-                    "dx": 30,
-                    "dy": -70
-                }
-            }
-		},
-		{
-			row: 20,
-			text: 'Intersection of Centre Street and Pond Street',
-            "breakpoints": {
-                "1": {
-                    "width": 90,
-                    "dx": 20,
-                    "dy": -20
-                },
-                "460": {
-                    "width": 90,
-                    "dx": 40,
-                    "dy": -20
-                }
-            }
-		}
-	];
+	var annotationData = require('./district2annotations.json');
 
 	// make data
 	var data = require('../../../data/output/bestDayForDistrict2_2014-06-20.csv')
@@ -642,57 +568,6 @@ function makeBestDayForDistrict2() {
 		.width(`${5280/2*100/distanceInFeet}%`)
 		.html(`<span>1/2 mile</span>`);
 
-	var mapLabels = [
-		{
-			html: '<span>Jamaica Plain</span>',
-			lng: -71.1203,
-			lat: 42.30985,
-			rank: 1,
-			dx: 0,
-			dy: -4
-		},
-		{
-			html: '<span>Forest Hills</span>',
-			lng: -71.112,
-			lat: 42.2968,
-			rank: 1,
-			dx: 10,
-			dy: 0
-		},
-		{
-			html: '<span>Roslindale</span>',
-			lng: -71.1245,
-			lat: 42.29125,
-			rank: 1,
-			dx: 0,
-			dy: 3
-		},
-		{
-			html: '<span>Roslindale Village</span>',
-			lng: -71.1303,
-			lat: 42.2875,
-			rank: 2,
-			dx: 0,
-			dy: 3
-		},
-		{
-			html: '<span>Arnold Arboretum</span>',
-			lng: -71.1226,
-			lat: 42.29945,
-			rank: 2,
-			dx: -5,
-			dy: 0
-		},
-		{
-			html: '<span>Olmsted Park</span>',
-			lng: -71.1187,
-			lat: 42.3225,
-			rank: 2,
-			dx: 0,
-			dy: 0
-		}
-	];
-
 	annotateMap.draw({
 		bounds,
 		data: data.filter(d => d.annotation),
@@ -700,7 +575,7 @@ function makeBestDayForDistrict2() {
 		height,
 		masterSelector: chartSelector,
 		text: d => `<span class='title'>${d.potholes} potholes</span><span class='text'>${d.annotation.text}</span>`,
-		mapLabels,
+		mapLabels: require('./district2labels.json'),
 		datumRadiusScale: radius,
 		datumRadiusProperty: 'potholes'
 	});
