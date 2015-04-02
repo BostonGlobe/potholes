@@ -678,7 +678,7 @@ function makeClusters() {
 		var textScale = d3.scale.linear()
 			.range([11, 12])
 			.domain(outerWidthExtent);
-		var textSize = textScale(outerWidth);
+		var textSize = textScale(width);
 
 		// Make the bar margin based on text size
 		var barMargin = textSize/8;
@@ -687,11 +687,11 @@ function makeClusters() {
 		var barHeight = textSize * 1.2 + barMargin*2;
 
 		// Make the top margin based on text size
-		var topMarginScale = d3.scale.linear().range([5, 15]).domain(outerWidthExtent);
-		var topMargin = topMarginScale(outerWidth);
+		var topMarginScale = d3.scale.linear().range([5, 10]).domain(outerWidthExtent);
+		var topMargin = topMarginScale(width);
 
-		var leftMarginScale = d3.scale.linear().range([80, 100]).domain(outerWidthExtent);
-		var leftMargin = leftMarginScale(outerWidth);
+		var leftMarginScale = d3.scale.linear().range([80, 90]).domain(outerWidthExtent);
+		var leftMargin = leftMarginScale(width);
 
 		var maxBarWidth = width*0.55 - leftMargin;
 
@@ -760,7 +760,7 @@ function makeClusters() {
 		width,
 		height,
 		masterSelector: chartSelector,
-		text: d => `<span class='title'>${d.potholes} potholes</span><span class='text'>${d.annotation.text}</span>`,
+		text: d => d.annotation.html,
 		mapLabels: require('./clustersLabels.json'),
 		datumRadiusScale: radius,
 		datumRadiusProperty: 'potholes'

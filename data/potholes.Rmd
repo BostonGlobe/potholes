@@ -205,9 +205,12 @@ data <- rbind(
   tally() %>%
   ungroup() %>%
   filter(n >= 15) %>%
-  select(-DATE.CLOSED.R)
+  select(-DATE.CLOSED.R) %>%
+  arrange(desc(n))
 
-write.csv(data, 'output/clustersIn2014.csv', row.names = FALSE)
+csv <- cbind(row = rownames(data), data)
+
+write.csv(csv, 'output/clustersIn2014.csv', row.names = FALSE)
 
 map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
 ggmap(map) +
