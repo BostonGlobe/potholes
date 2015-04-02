@@ -1,0 +1,58 @@
+[
+	{
+		"html": "<span>Chelsea</span>",
+		"lng": -71.033,
+		"lat": 42.392,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Quincy</span>",
+		"lng": -71.002,
+		"lat": 42.253,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Milton</span>",
+		"lng": -71.066,
+		"lat": 42.25,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Dedham</span>",
+		"lng": -71.166,
+		"lat": 42.242,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Watertown</span>",
+		"lng": -71.183,
+		"lat": 42.371,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Brookline</span>",
+		"lng": -71.121,
+		"lat": 42.332,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	},
+	{
+		"html": "<span>Cambridge</span>",
+		"lng": -71.106,
+		"lat": 42.375,
+		"rank": 1,
+		"dx": 0,
+		"dy": 0
+	}
+]

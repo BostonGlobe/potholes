@@ -11,31 +11,6 @@ function log(s) {
 	console.log(JSON.stringify(s, null, 4));
 }
 
-// function getCoords(d, x, y, radius) {
-
-// 	var origin = {
-// 		x: x(d.lng),
-// 		y: y(d.lat)
-// 	};
-
-// 	var width = x.range()[1]*d.annotation.width/100;
-
-// 	var coords = {
-// 		x1: x.range()[1]*d.annotation.left/100 + (d.annotation.align === 'right' ? width : 0),
-// 		x2: origin.x,
-// 		y1: y.range()[0]*d.annotation.top/100,
-// 		y2: origin.y
-// 	};
-
-// 	var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
-// 	var diff = h - radius(d.potholes);
-
-// 	coords.h = h;
-// 	coords.diff = diff;
-
-// 	return coords;
-// }
-
 var masterSelector = '.igraphic-graphic.graphic';
 var master = $(masterSelector);
 
@@ -542,8 +517,8 @@ function makeBestDayForDistrict2() {
 		.domain([bounds.S, bounds.N]);
 
 	var radius = d3.scale.sqrt()
-		.domain([0, d3.max(data, d => d.potholes)])
-		.range([0, width/30]);
+		.range([0, width/30])
+		.domain([0, d3.max(data, d => d.potholes)]);
 
 	// create circles
 	g.selectAll('circle')
@@ -586,42 +561,29 @@ function makeClusters() {
 
 	var chartSelector = `.clusters`;
 
-	var outerWidth = $(chartSelector, master).width();
-	var outerHeight = 1316/1200*outerWidth;
+	var width = $(chartSelector, master).width();
+	var height = 1316/1200*width;
 
 	$(chartSelector, master).empty();
 
-	var annotationData = [
-		{
-			row: 1,
-			text: 'City-owned parking lot patched on April 3. “I think [47] is reasonable,” paver Scott Shea said, when asked about his work. “It’s a good-sized lot. Have you been in there when there are no cars?”',
-			left: 1,
-			top: 40,
-			align: 'right',
-			width: 32,
-			topOffset: -10
-		},
-		{
-			row: 13,
-			text: 'One of several clusters District 3 patched on January 13, totalling over 60 potholes on tree-lined Grampian Way along Savin Hill Park.',
-			left: 69,
-			top: 60,
-			align: 'left',
-			width: 40,
-			topOffset: 0,
-			leftOffset: -12
-		},
-		{
-			row: 35,
-			text: 'District 4 fixed 11 potholes on July 5, 2013 at this Chinatown location, and 17 in the exact same spot on July 5, 2014.',
-			left: 67,
-			top: 18,
-			align: 'left',
-			width: 30,
-			topOffset: -10,
-			leftOffset: 0
-		}
-	];
+	// create the map skeleton
+	var skeleton = `
+		<div class='baselayer'>
+			<img src='http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg' />
+		</div>
+		<div class='map-labels'></div>
+		<svg class='map'></svg>
+		<svg class='annotation-guides'></svg>
+		<div class='annotation-texts'></div>
+		<div class='map-distance-legend'></div>
+	`;
+
+	// clear container and rerender html
+	$(chartSelector, master)
+		.empty()
+		.html(skeleton);
+
+	var annotationData = require('./clustersAnnotations.json');
 
 	var data = require('../../../data/output/clustersIn2014.csv')
 		.map(function(datum) {
@@ -661,174 +623,52 @@ function makeClusters() {
 
 	var orderedDistricts = _.pluck(districtsAndCount, 'district');
 
-	var margin = {top: 0, right: 0, bottom: 0, left: 0};
-	var width = outerWidth - margin.left - margin.right;
-	var height = outerHeight - margin.top - margin.bottom;
-
-	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
+	// make map g
+	var mapSelector = `${chartSelector} svg.map`;
+	var g = d3.select(mapSelector)
 		.attr({
-			width: outerWidth,
-			height: outerHeight
+			width: width,
+			height: height
+		})
+		.append('g');
+
+	var bounds = {W: -71.201, E: -70.9779, S: 42.2211, N: 42.4022};
+
+	// create circles scales
+	var x = d3.scale.linear()
+		.range([0, width])
+		.domain([bounds.W, bounds.E]);
+
+	var y = d3.scale.linear()
+		.range([height, 0])
+		.domain([bounds.S, bounds.N]);
+
+	var radius = d3.scale.sqrt()
+		.range([0, width/30])
+		.domain([0, d3.max(data, d => d.potholes)]);
+
+	// create circles
+	g.selectAll('circle')
+		.data(data)
+		.enter().append('circle')
+		.attr({
+			cx: d => x(d.lng),
+			cy: d => y(d.lat),
+			r: d => radius(d.potholes),
+		})
+		.style({
+			fill: d => colors.array.secondary[_.indexOf(orderedDistricts, d.district)],
+			'fill-opacity': 0.45,
+			stroke: d => d3.rgb(colors.array.secondary[_.indexOf(orderedDistricts, d.district)]).darker()
 		});
 
-	d3.select(`${masterSelector} ${chartSelector}`).append('img')
-		.attr({
-			'class': 'baselayer',
-			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/boston_1200w.jpg'
-		});
+	// get the distance in feet
+	var distanceInFeet = Math.floor(latLngDistance.getDistanceFromLatLonInKm(bounds.S, bounds.W, bounds.S, bounds.E) * 3280.84);
 
-	function makeCircles() {
-	
-		var x = d3.scale.linear()
-			.range([0, width])
-			.domain([-71.201, -70.9779]);
-
-		var y = d3.scale.linear()
-			.range([height, 0])
-			.domain([42.2211, 42.4022]);
-
-		var radius = d3.scale.sqrt()
-			.range([0, width/30])
-			.domain([0, d3.max(data, d => d.potholes)]);
-
-		svg.append('g')
-			.attr({
-				'class': 'circles',
-				transform: `translate(${margin.left}, ${margin.top})`
-			})
-			.selectAll('circle')
-			.data(data)
-			.enter().append('circle')
-			.attr({
-				cx: d => x(d.lng),
-				cy: d => y(d.lat),
-				r: d => radius(d.potholes),
-				fill: d => colors.array.secondary[_.indexOf(orderedDistricts, d.district)],
-				'fill-opacity': 0.45,
-				stroke: d => d3.rgb(colors.array.secondary[_.indexOf(orderedDistricts, d.district)]).darker()
-			})
-			.on('mouseover', log);
-
-		var labels = [
-			{
-				name: 'Chelsea',
-				lng: -71.033,
-				lat: 42.392,
-				rank: 1,
-				dx: -6,
-				dy: 0
-			},
-			{
-				name: 'Quincy',
-				lng: -71.002,
-				lat: 42.253,
-				rank: 1,
-				dx: -4,
-				dy: 0
-			},
-			{
-				name: 'Milton',
-				lng: -71.066,
-				lat: 42.25,
-				rank: 1,
-				dx: -5,
-				dy: 0
-			},
-			{
-				name: 'Dedham',
-				lng: -71.166,
-				lat: 42.242,
-				rank: 1,
-				dx: -6,
-				dy: 0
-			},
-			{
-				name: 'Watertown',
-				lng: -71.183,
-				lat: 42.371,
-				rank: 1,
-				dx: -8,
-				dy: 4
-			},
-			{
-				name: 'Brookline',
-				lng: -71.121,
-				lat: 42.332,
-				rank: 1,
-				dx: -15,
-				dy: 0
-			},
-			{
-				name: 'Cambridge',
-				lng: -71.106,
-				lat: 42.375,
-				rank: 1,
-				dx: -7,
-				dy: 4
-			}
-		];
-
-		d3.select(`${masterSelector} ${chartSelector}`).append('div')
-			.attr('class', 'labels')
-			.selectAll('div')
-			.data(labels)
-			.enter().append('div')
-			.attr({
-				'class': d=> `light label rank${d.rank}`
-			})
-			.style({
-				left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
-				top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
-			})
-			.html(d => `<span>${d.name}</span>`);
-
-			var annotationPoints = data.filter(d => d.annotation);
-
-			var g_annotations = svg.append('g')
-				.attr({
-					'class': 'annotationMarkers',
-					transform: `translate(${margin.left}, ${margin.top})`
-				});
-
-		g_annotations.selectAll('line')
-			.data(annotationPoints)
-			.enter().append('line')
-			.attr({
-				'class': 'solid',
-				x1: d => getCoords(d, x, y, radius).x1,
-				x2: d => getCoords(d, x, y, radius).x2,
-				y1: d => getCoords(d, x, y, radius).y1,
-				y2: d => getCoords(d, x, y, radius).y2
-			})
-			.style({
-				'stroke-dasharray': function(d) {
-					var coords = getCoords(d, x, y, radius);
-					var stroke = `${coords.diff},${coords.h}`;
-					return stroke;
-				}
-			});
-
-		d3.select(`${masterSelector} ${chartSelector}`).append('div')
-			.attr('class', 'annotations')
-			.selectAll('.annotation')
-			.data(annotationPoints)
-		.enter().append('div')
-			.attr({
-				'class': d => `annotation map ${d.annotation.align}`
-			})
-			.style({
-				left: d => `${d.annotation.left}%`,
-				top: d => `${d.annotation.top}%`,
-				'text-align': d => d.annotation.align,
-				width: d => `${d.annotation.width}%`,
-				'margin-left': d => d.annotation.leftOffset ? `${d.annotation.leftOffset}%` : 0,
-				'margin-top': d => d.annotation.topOffset ? `${d.annotation.topOffset}%` : 0
-			})
-			.html(function(d) {
-				return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
-			});
-	}
-	makeCircles();
+	// display the distance line and label
+	$(`${chartSelector} .map-distance-legend`)
+		.width(`${5280*2*100/distanceInFeet}%`)
+		.html(`<span>2 miles</span>`);
 
 	function makeBars() {
 
@@ -859,7 +699,13 @@ function makeClusters() {
 			.range([0, maxBarWidth])
 			.domain([0, d3.max(districtsAndCount, d => d.count)]);
 
-		var bars = svg.append('g')
+		var bars = d3.select(chartSelector).append('svg')
+			.attr({
+				'class': 'annotatedBarChart',
+				width: width,
+				height: height
+			})
+			.append('g')
 			.attr({
 				'class': 'bars',
 				transform: `translate(${leftMargin}, ${topMargin})`
@@ -907,6 +753,18 @@ function makeClusters() {
 			.text((d,i) => `${util.numberWithCommas(d.count)}${!i ? ' clusters': ''}`);
 	}
 	makeBars();
+
+	annotateMap.draw({
+		bounds,
+		data: data.filter(d => d.annotation),
+		width,
+		height,
+		masterSelector: chartSelector,
+		text: d => `<span class='title'>${d.potholes} potholes</span><span class='text'>${d.annotation.text}</span>`,
+		mapLabels: require('./clustersLabels.json'),
+		datumRadiusScale: radius,
+		datumRadiusProperty: 'potholes'
+	});
 
 }
 

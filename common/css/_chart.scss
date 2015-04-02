@@ -12,6 +12,10 @@
 		font-family: $sansSerif;
 	}
 
+	rect {
+		shape-rendering: crispEdges;
+	}
+
 	.annotations {
 		position: absolute;
 		top: 0;

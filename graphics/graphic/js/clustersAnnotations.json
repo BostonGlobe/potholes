@@ -1,0 +1,68 @@
+[
+	{
+		"row": 1,
+		"text": "City-owned parking lot patched on April 3. “I think [47] is reasonable,” paver Scott Shea said, when asked about his work. “It’s a good-sized lot. Have you been in there when there are no cars?”",
+        "breakpoints": {
+            "1": {
+            	"flip": true,
+                "width": 90,
+                "dx": -20,
+                "dy": -60
+            },
+            "460": {
+                "flip": true,
+                "width": 110,
+                "dx": -60,
+                "dy": -80
+            },
+            "599": {
+                "flip": true,
+                "width": 150,
+                "dx": -70,
+                "dy": -90
+            }
+        }
+	},
+	{
+		"row": 13,
+		"text": "One of several clusters District 3 patched on January 13, totalling over 60 potholes on tree-lined Grampian Way along Savin Hill Park.",
+        "breakpoints": {
+            "1": {
+                "width": 75,
+                "dx": 15,
+                "dy": -35
+            },
+            "460": {
+                "width": 100,
+                "dx": 30,
+                "dy": -35
+            },
+            "599": {
+                "width": 140,
+                "dx": 30,
+                "dy": -35
+            }
+        }
+	},
+	{
+		"row": 35,
+		"text": "District 1 fixed 11 potholes on July 5, 2013 at this Chinatown location, and 17 in the exact same spot 365 days later.",
+        "breakpoints": {
+            "1": {
+                "width": 90,
+                "dx": 20,
+                "dy": -85
+            },
+            "460": {
+                "width": 130,
+                "dx": 30,
+                "dy": -60
+            },
+            "599": {
+                "width": 130,
+                "dx": 30,
+                "dy": -60
+            }
+        }
+	}
+]

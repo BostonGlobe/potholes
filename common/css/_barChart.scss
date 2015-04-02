@@ -2,7 +2,11 @@
 
 	@extend %chart;
 
-	g.bar text.number {
+	text {
+		font-family: $sansSerif;
+	}
+
+	text.number {
 		fill: white;
 		text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
 	}
