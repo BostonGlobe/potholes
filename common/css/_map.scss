@@ -16,20 +16,6 @@
 		left: 0;
 		width: 100%;
 		height: 100%;
-
-		path.BRA {
-			fill: none;
-			stroke: #bf6151;
-			stroke-width: 2;
-		}
-
-		path.CSCNC {
-			fill: none;
-			stroke: black;
-			stroke-dasharray: 6, 6;
-			stroke-width: 1.5;
-			stroke-opacity: 0.8;
-		}
 	}
 
 	.map-distance-legend {
@@ -41,8 +27,6 @@
 		font-family: $sansSerif;
 		text-align: right;
 		font-size: 10px;
-		// @include adjust-font-size-to(10px);
-		// @include adjust-leading-to(1);
 	}
 
 	.map-labels {
@@ -81,11 +65,6 @@
 
 	.annotation-texts {
 		font-family: $sansSerif;
-		font-size: 11px;
-		line-height: 16.5px;
-		// @include adjust-font-size-to($s3);
-
-		// @include adjust-leading-to(1);
 		position: absolute;
 		top: 0;
 		left: 0;
@@ -95,7 +74,13 @@
 		.annotation {
 			position: absolute;
 			background: rgba(255, 255, 255, 0.75);
+			// background: red;
 			padding: 0.3em 0.5em;
+			line-height: 11px;
+
+			span {
+				font-size: 11px;
+			}
 
 			span.title {
 				font-weight: bold;

@@ -525,7 +525,13 @@ function makeBestDayForDistrict2() {
                 	"flip": true,
                     "width": 90,
                     "dx": -50,
-                    "dy": -10
+                    "dy": -20
+                },
+                "460": {
+                	"flip": true,
+                    "width": 150,
+                    "dx": -50,
+                    "dy": -20
                 }
             }
 		},
@@ -534,9 +540,19 @@ function makeBestDayForDistrict2() {
 			text: 'Stella Road is a private way worn through to dirt in many places. Abutting property owners are responsible for fixing the road, but the city often patches potholes on the street, which is off Hyde Park Avenue.',
             "breakpoints": {
                 "1": {
-                    "width": 90,
-                    "dx": 0,
-                    "dy": 0
+                    "width": 120,
+                    "dx": 20,
+                    "dy": -150
+                },
+                "460": {
+                    "width": 160,
+                    "dx": 30,
+                    "dy": -90
+                },
+                "600": {
+                    "width": 200,
+                    "dx": 30,
+                    "dy": -70
                 }
             }
 		},
@@ -546,8 +562,13 @@ function makeBestDayForDistrict2() {
             "breakpoints": {
                 "1": {
                     "width": 90,
-                    "dx": 0,
-                    "dy": 0
+                    "dx": 20,
+                    "dy": -20
+                },
+                "460": {
+                    "width": 90,
+                    "dx": 40,
+                    "dy": -20
                 }
             }
 		}
