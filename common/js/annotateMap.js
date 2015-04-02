@@ -6,7 +6,32 @@ function log(s) {
 
 module.exports = {
 
-	getSettings(annotation, width) {
+	getCoords(d, x, y, radius) {
+
+		var origin = {
+			x: x(d.lng),
+			y: y(d.lat)
+		};
+
+		var settings = this.getAnnotationBreakpointSettings(d.annotation, this.opts.width);
+
+		var coords = {
+			x1: origin.x + settings.dx,
+			x2: origin.x,
+			y1: origin.y,
+			y2: origin.y
+		};
+
+		var h = Math.sqrt(Math.pow(coords.x2-coords.x1,2) + Math.pow(coords.y2-coords.y1,2));
+		var diff = h - radius(d[this.opts.datumRadiusProperty]);
+
+		coords.h = h;
+		coords.diff = diff;
+
+		return coords;
+	},
+
+	getAnnotationBreakpointSettings(annotation, width) {
 
 		var match = _.chain(annotation.breakpoints)
 			.keys()
@@ -24,20 +49,24 @@ module.exports = {
 
 		this.opts = opts;
 
+		var annotationGuidesSelector = `${this.opts.masterSelector} .annotation-guides`;
+
 		// clear guides
-		$(opts.annotationGuidesSelector).empty();
+		$(annotationGuidesSelector).empty();
 
 		// clear texts
-		$(opts.annotationTextsSelector).empty();
+		$(`${this.opts.masterSelector} .annotation-texts`).empty();
 
 		// resize guides
-		this.svg = d3.select(opts.annotationGuidesSelector)
+		this.svg = d3.select(annotationGuidesSelector)
 			.attr({
 				width: opts.width,
 				height: opts.height
 			});
 
-		this.drawCircles();
+		if (!this.opts.datumRadiusScale) {
+			this.drawCircles();
+		}
 
 		this.drawLines();
 
@@ -63,8 +92,8 @@ module.exports = {
 			.data(this.opts.data)
 			.enter().append('circle')
 			.attr({
-				cx: d => x(d.Longitude),
-				cy: d => y(d.Latitude),
+				cx: d => x(d.lng),
+				cy: d => y(d.lat),
 				r: 3
 			});
 	},
@@ -79,6 +108,8 @@ module.exports = {
 			.range([this.opts.height, 0])
 			.domain([this.opts.bounds.S, this.opts.bounds.N]);
 
+		var radius = this.opts.datumRadiusScale;
+
 		var self = this;
 
 		this.svg.append('g')
@@ -87,13 +118,17 @@ module.exports = {
 			.data(this.opts.data)
 			.enter().append('line')
 			.attr({
-				x1: d => x(d.Longitude),
-				x2: function(d) {
-					var settings = self.getSettings(d.annotation, self.opts.width);
-					return x(d.Longitude) + settings.dx;
-				},
-				y1: d => y(d.Latitude),
-				y2: d => y(d.Latitude)
+				x1: d => self.getCoords(d, x, y, radius).x1,
+				x2: d => self.getCoords(d, x, y, radius).x2,
+				y1: d => self.getCoords(d, x, y, radius).y1,
+				y2: d => self.getCoords(d, x, y, radius).y2
+			})
+			.style({
+				'stroke-dasharray': function(d) {
+					var coords = self.getCoords(d, x, y, radius);
+					var stroke = `${coords.diff},${coords.h}`;
+					return stroke;
+				}
 			});
 
 	},
@@ -110,16 +145,16 @@ module.exports = {
 
 		var self = this;
 
-		d3.select(this.opts.mapLabelsSelector)
+		d3.select(`${self.opts.masterSelector} .map-labels`)
 			.selectAll('div')
 			.data(this.opts.mapLabels)
 			.enter().append('div')
 			.attr({
-				'class': 'map-label'
+				'class': d => `map-label rank${d.rank}`
 			})
 			.style({
-				top: d => `${y(d.lat)}%`,
-				left: d => `${x(d.lng)}%`
+				top: d => `${y(d.lat) + d.dy}%`,
+				left: d => `${x(d.lng) + d.dx}%`
 			})
 			.append('span')
 			.attr('class', 'label')
@@ -139,28 +174,28 @@ module.exports = {
 
 		var self = this;
 
-		d3.select(this.opts.annotationTextsSelector)
+		d3.select(`${self.opts.masterSelector} .annotation-texts`)
 			.selectAll('div')
 			.data(this.opts.data)
 			.enter().append('div')
 			.attr('class', 'annotation')
 			.style({
 				'text-align': function(d) {
-					var settings = self.getSettings(d.annotation, self.opts.width);
+					var settings = self.getAnnotationBreakpointSettings(d.annotation, self.opts.width);
 					return settings.flip ? 'right' : 'left';
 				},
 				width: function(d) {
-					var settings = self.getSettings(d.annotation, self.opts.width);
+					var settings = self.getAnnotationBreakpointSettings(d.annotation, self.opts.width);
 					return `${settings.width}px`;
 				},
-				top: d => `${y(d.Latitude)}%`,
-				left: d => `${x(d.Longitude)}%`,
+				top: d => `${y(d.lat)}%`,
+				left: d => `${x(d.lng)}%`,
 				'margin-left': function(d) {
-					var settings = self.getSettings(d.annotation, self.opts.width);
+					var settings = self.getAnnotationBreakpointSettings(d.annotation, self.opts.width);
 					return `${settings.dx - (settings.flip ? settings.width : 0)}px`;
 				},
 				'margin-top': function(d) {
-					var settings = self.getSettings(d.annotation, self.opts.width);
+					var settings = self.getAnnotationBreakpointSettings(d.annotation, self.opts.width);
 					return `${settings.dy}px`;
 				}
 			})
