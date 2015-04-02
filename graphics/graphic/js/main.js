@@ -2,6 +2,7 @@ var d3 = require('d3');
 var APDateTime = require('../../../common/js/APDateTime.js');
 var colors = require('../../../common/js/colors.js');
 var util = require('../../../common/js/util.js');
+var annotateMap = require('../../../common/js/annotateMap.js');
 
 var Leaflet = require('leaflet');
 
@@ -479,39 +480,27 @@ function makeBestDayForDistrict2() {
 	var outerWidth = $(chartSelector, master).width();
 	var outerHeight = 1464/1200*outerWidth;
 
-	$(chartSelector, master).empty();
+	// create the map skeleton
+	var skeleton = `
+		<div class='baselayer'>
+			<img src='http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg' />
+		</div>
+		<div class='map-labels'></div>
+		<svg class='map'></svg>
+		<svg class='annotation-guides'></svg>
+		<div class='annotation-texts'></div>
+		<div class='map-distance-legend'>
+			<span class='number'></span>
+		</div>
+	`;
 
-	var annotationData = [
-		{
-			row: 1,
-			text: 'Intersection of Washington Street and Franklin Place',
-			left: 0,
-			top: 69.5,
-			align: 'right',
-			width: 34,
-			topOffset: -5
-		},
-		{
-			row: 5,
-			text: 'Despite being a private street, crews repeatedly patch Stella Road off Hyde Park Avenue. It is worn through to the dirt in many places.',
-			left: 60,
-			top: 77,
-			align: 'left',
-			width: 38,
-			topOffset: -10
-		},
-		{
-			row: 20,
-			text: 'Intersection of Centre Street and Pond Street',
-			left: 8,
-			top: 24.2,
-			align: 'right',
-			width: 38,
-			topOffset: -5
-		}
-	];
+	// clear container and rerender html
+	$(chartSelector, master)
+		.empty()
+		.html(skeleton);
 
-	var data = _.chain(require('../../../data/output/bestDayForDistrict2_2014-06-20.csv'))
+	// make data
+	var data = require('../../../data/output/bestDayForDistrict2_2014-06-20.csv')
 		.map(function(datum) {
 
 			var result = {
@@ -521,101 +510,41 @@ function makeBestDayForDistrict2() {
 				row: +datum.row
 			};
 
-			var match = _.find(annotationData, {row: result.row});
-
-			if (match) {
-				result.annotation = match;
-			}
-
 			return result;
 		})
-		.reverse()
-		.value();
+		.reverse();
 
+	// setup svg margins
 	var margin = {top: 0, right: 0, bottom: 0, left: 0};
 	var width = outerWidth - margin.left - margin.right;
 	var height = outerHeight - margin.top - margin.bottom;
 
+	// create svg
 	var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
 		.attr({
 			width: outerWidth,
 			height: outerHeight
 		});
 
-	d3.select(`${masterSelector} ${chartSelector}`).append('img')
-		.attr({
-			'class': 'baselayer',
-			'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
-		});
-
+	// create circles container
 	var g_circles = svg.append('g')
 		.attr({
 			'class': 'circles',
 			transform: `translate(${margin.left}, ${margin.top})`
 		});
 
+	// create circles scales
 	var x = d3.scale.linear()
-		.range([0, width])
-		.domain([-71.1419, -71.0921]);
+		.domain([-71.1419, -71.0921])
+		.range([0, width]);
 
 	var y = d3.scale.linear()
-		.range([height, 0])
-		.domain([42.2823, 42.3249]);
+		.domain([42.2823, 42.3249])
+		.range([height, 0]);
 
 	var radius = d3.scale.sqrt()
 		.domain([0, d3.max(data, d => d.potholes)])
 		.range([0, width/30]);
-
-	var labels = [
-		{
-			name: 'Jamaica Plain',
-			lng: -71.1203,
-			lat: 42.30985,
-			rank: 1,
-			dx: 0,
-			dy: -1
-		},
-		{
-			name: 'Forest Hills',
-			lng: -71.112,
-			lat: 42.2968,
-			rank: 1,
-			dx: 0,
-			dy: 0
-		},
-		{
-			name: 'Roslindale',
-			lng: -71.1245,
-			lat: 42.29125,
-			rank: 1,
-			dx: 0,
-			dy: 4.5
-		},
-		{
-			name: 'Roslindale Village',
-			lng: -71.1303,
-			lat: 42.2875,
-			rank: 2,
-			dx: -0,
-			dy: 3
-		},
-		{
-			name: 'Arnold Arboretum',
-			lng: -71.1226,
-			lat: 42.29945,
-			rank: 2,
-			dx: -5,
-			dy: 0
-		},
-		{
-			name: 'Olmsted Park',
-			lng: -71.1187,
-			lat: 42.3225,
-			rank: 2,
-			dx: 0,
-			dy: 0
-		}
-	];
 
 	g_circles.selectAll('circle')
 		.data(data)
@@ -629,67 +558,228 @@ function makeBestDayForDistrict2() {
 			fill: colors.named.secondary.brick,
 			'fill-opacity': 0.45,
 			stroke: d3.rgb(colors.named.secondary.brick).darker()
-		})
-		.on('mouseover', log);
-
-	d3.select(`${masterSelector} ${chartSelector}`).append('div')
-		.attr('class', 'labels')
-		.selectAll('div')
-		.data(labels)
-		.enter().append('div')
-		.attr({
-			'class': d=> `label rank${d.rank}`
-		})
-		.style({
-			left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
-			top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
-		})
-		.html(d => `<span>${d.name}</span>`);
-
-	var annotationPoints = data.filter(d => d.annotation);
-
-	var g_annotations = svg.append('g')
-		.attr({
-			'class': 'annotationMarkers',
-			transform: `translate(${margin.left}, ${margin.top})`
 		});
 
-	g_annotations.selectAll('line')
-		.data(annotationPoints)
-		.enter().append('line')
-		.attr({
-			'class': 'solid',
-			x1: d => getCoords(d, x, y, radius).x1,
-			x2: d => getCoords(d, x, y, radius).x2,
-			y1: d => getCoords(d, x, y, radius).y1,
-			y2: d => getCoords(d, x, y, radius).y2
-		})
-		.style({
-			'stroke-dasharray': function(d) {
-				var coords = getCoords(d, x, y, radius);
-				var stroke = `${coords.diff},${coords.h}`;
-				return stroke;
-			}
-		});
 
-	d3.select(`${masterSelector} ${chartSelector}`).append('div')
-		.attr('class', 'annotations')
-		.selectAll('.annotation')
-		.data(annotationPoints)
-	.enter().append('div')
-		.attr({
-			'class': d => `annotation map ${d.annotation.align}`
-		})
-		.style({
-			left: d => `${d.annotation.left}%`,
-			top: d => `${d.annotation.top}%`,
-			'text-align': d => d.annotation.align,
-			width: d => `${d.annotation.width}%`,
-			'margin-top': d => d.annotation.topOffset ? `${d.annotation.topOffset}%` : 0
-		})
-		.html(function(d) {
-			return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
-		});
+
+
+
+
+
+
+
+
+
+
+
+	// var annotationData = [
+	// 	{
+	// 		row: 1,
+	// 		text: 'Intersection of Washington Street and Franklin Place',
+	// 		left: 0,
+	// 		top: 69.5,
+	// 		align: 'right',
+	// 		width: 34,
+	// 		topOffset: -5
+	// 	},
+	// 	{
+	// 		row: 5,
+	// 		text: 'Stella Road is a private way worn through to dirt in many places. Abutting property owners are responsible for fixing the road, but the city often patches potholes on the street, which is off Hyde Park Avenue.',
+	// 		left: 60,
+	// 		top: 77,
+	// 		align: 'left',
+	// 		width: 38,
+	// 		topOffset: -10
+	// 	},
+	// 	{
+	// 		row: 20,
+	// 		text: 'Intersection of Centre Street and Pond Street',
+	// 		left: 8,
+	// 		top: 24.2,
+	// 		align: 'right',
+	// 		width: 38,
+	// 		topOffset: -5
+	// 	}
+	// ];
+
+	// var data = _.chain(require('../../../data/output/bestDayForDistrict2_2014-06-20.csv'))
+	// 	.map(function(datum) {
+
+	// 		var result = {
+	// 			lat: +datum.LATITUDE,
+	// 			lng: +datum.LONGITUDE,
+	// 			potholes: +datum.n,
+	// 			row: +datum.row
+	// 		};
+
+	// 		// var match = _.find(annotationData, {row: result.row});
+
+	// 		// if (match) {
+	// 		// 	result.annotation = match;
+	// 		// }
+
+	// 		return result;
+	// 	})
+	// 	.reverse()
+	// 	.value();
+
+	// var margin = {top: 0, right: 0, bottom: 0, left: 0};
+	// var width = outerWidth - margin.left - margin.right;
+	// var height = outerHeight - margin.top - margin.bottom;
+
+	// var svg = d3.select(`${masterSelector} ${chartSelector}`).append('svg')
+	// 	.attr({
+	// 		width: outerWidth,
+	// 		height: outerHeight
+	// 	});
+
+	// d3.select(`${masterSelector} ${chartSelector}`).append('img')
+	// 	.attr({
+	// 		'class': 'baselayer',
+	// 		'src': 'http://cache.boston.com/multimedia/graphics/projectFiles/2015/potholes/img/district2_1200w.jpg'
+	// 	});
+
+	// var g_circles = svg.append('g')
+	// 	.attr({
+	// 		'class': 'circles',
+	// 		transform: `translate(${margin.left}, ${margin.top})`
+	// 	});
+
+	// var x = d3.scale.linear()
+	// 	.range([0, width])
+	// 	.domain([-71.1419, -71.0921]);
+
+	// var y = d3.scale.linear()
+	// 	.range([height, 0])
+	// 	.domain([42.2823, 42.3249]);
+
+	// var radius = d3.scale.sqrt()
+	// 	.domain([0, d3.max(data, d => d.potholes)])
+	// 	.range([0, width/30]);
+
+	// var labels = [
+	// 	{
+	// 		name: 'Jamaica Plain',
+	// 		lng: -71.1203,
+	// 		lat: 42.30985,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: -1
+	// 	},
+	// 	{
+	// 		name: 'Forest Hills',
+	// 		lng: -71.112,
+	// 		lat: 42.2968,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: 0
+	// 	},
+	// 	{
+	// 		name: 'Roslindale',
+	// 		lng: -71.1245,
+	// 		lat: 42.29125,
+	// 		rank: 1,
+	// 		dx: 0,
+	// 		dy: 4.5
+	// 	},
+	// 	{
+	// 		name: 'Roslindale Village',
+	// 		lng: -71.1303,
+	// 		lat: 42.2875,
+	// 		rank: 2,
+	// 		dx: -0,
+	// 		dy: 3
+	// 	},
+	// 	{
+	// 		name: 'Arnold Arboretum',
+	// 		lng: -71.1226,
+	// 		lat: 42.29945,
+	// 		rank: 2,
+	// 		dx: -5,
+	// 		dy: 0
+	// 	},
+	// 	{
+	// 		name: 'Olmsted Park',
+	// 		lng: -71.1187,
+	// 		lat: 42.3225,
+	// 		rank: 2,
+	// 		dx: 0,
+	// 		dy: 0
+	// 	}
+	// ];
+
+	// g_circles.selectAll('circle')
+	// 	.data(data)
+	// 	.enter().append('circle')
+	// 	.attr({
+	// 		cx: d => x(d.lng),
+	// 		cy: d => y(d.lat),
+	// 		r: d => radius(d.potholes),
+	// 	})
+	// 	.style({
+	// 		fill: colors.named.secondary.brick,
+	// 		'fill-opacity': 0.45,
+	// 		stroke: d3.rgb(colors.named.secondary.brick).darker()
+	// 	});
+
+	// d3.select(`${masterSelector} ${chartSelector}`).append('div')
+	// 	.attr('class', 'labels')
+	// 	.selectAll('div')
+	// 	.data(labels)
+	// 	.enter().append('div')
+	// 	.attr({
+	// 		'class': d=> `label rank${d.rank}`
+	// 	})
+	// 	.style({
+	// 		left: d => `${(100 * x(d.lng)/x.range()[1]) + d.dx}%`,
+	// 		top: d => `${(100 * y(d.lat)/y.range()[0]) + d.dy}%`
+	// 	})
+	// 	.html(d => `<span>${d.name}</span>`);
+
+	// var annotationPoints = data.filter(d => d.annotation);
+
+	// var g_annotations = svg.append('g')
+	// 	.attr({
+	// 		'class': 'annotationMarkers',
+	// 		transform: `translate(${margin.left}, ${margin.top})`
+	// 	});
+
+	// g_annotations.selectAll('line')
+	// 	.data(annotationPoints)
+	// 	.enter().append('line')
+	// 	.attr({
+	// 		'class': 'solid',
+	// 		x1: d => getCoords(d, x, y, radius).x1,
+	// 		x2: d => getCoords(d, x, y, radius).x2,
+	// 		y1: d => getCoords(d, x, y, radius).y1,
+	// 		y2: d => getCoords(d, x, y, radius).y2
+	// 	})
+	// 	.style({
+	// 		'stroke-dasharray': function(d) {
+	// 			var coords = getCoords(d, x, y, radius);
+	// 			var stroke = `${coords.diff},${coords.h}`;
+	// 			return stroke;
+	// 		}
+	// 	});
+
+	// d3.select(`${masterSelector} ${chartSelector}`).append('div')
+	// 	.attr('class', 'annotations')
+	// 	.selectAll('.annotation')
+	// 	.data(annotationPoints)
+	// .enter().append('div')
+	// 	.attr({
+	// 		'class': d => `annotation map ${d.annotation.align}`
+	// 	})
+	// 	.style({
+	// 		left: d => `${d.annotation.left}%`,
+	// 		top: d => `${d.annotation.top}%`,
+	// 		'text-align': d => d.annotation.align,
+	// 		width: d => `${d.annotation.width}%`,
+	// 		'margin-top': d => d.annotation.topOffset ? `${d.annotation.topOffset}%` : 0
+	// 	})
+	// 	.html(function(d) {
+	// 		return `<div><span class='number'>${d.potholes} potholes</span></div><div><span class='text'>${d.annotation.text}</span></div>`;
+	// 	});
 }
 
 function makeClusters() {

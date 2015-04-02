@@ -1,0 +1,9 @@
+.annotatedBarChart {
+
+	@extend %chart;
+
+	g.bar text.number {
+		fill: white;
+		text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
+	}
+}

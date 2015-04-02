@@ -1,7 +1,149 @@
-$richBlack: #464646;
-$neutral: #ecedee;
-$warm: #edece4;
-$cool: #ebf3f7;
+// $richBlack: #464646;
+// $neutral: #ecedee;
+// $warm: #edece4;
+// $cool: #ebf3f7;
+
+// .annotatedMap {
+// 	width: 100%;
+// 	overflow: hidden;
+// 	position: relative;
+
+// 	.baselayer {
+// 		img {
+// 			vertical-align: bottom;
+// 		}
+// 	}
+
+// 	svg.map {
+// 		position: absolute;
+// 		top: 0;
+// 		left: 0;
+// 		width: 100%;
+// 		height: 100%;
+
+// 		path.BRA {
+// 			fill: none;
+// 			stroke: #bf6151;
+// 			stroke-width: 2;
+// 		}
+
+// 		path.CSCNC {
+// 			fill: none;
+// 			stroke: black;
+// 			stroke-dasharray: 6, 6;
+// 			stroke-width: 1.5;
+// 			stroke-opacity: 0.8;
+// 		}
+// 	}
+
+// 	.map-distance-legend {
+// 		position: absolute;
+// 		bottom: 0.5em;
+// 		right: 0.5em;
+// 		border-bottom: solid rgba(0, 0, 0, 0.3) 1px;
+// 		color: rgba(0, 0, 0, 0.5);
+// 		font-family: $sansSerif;
+// 		text-align: right;
+// 		font-size: 10px;
+// 		// @include adjust-font-size-to(10px);
+// 		// @include adjust-leading-to(1);
+// 	}
+
+// 	.map-labels {
+// 		position: absolute;
+// 		top: 0;
+// 		left: 0;
+// 		width: 100%;
+// 		height: 100%;
+
+// 		.map-label {
+// 			position: absolute;
+
+// 			span {
+// 				display: block;
+// 			}
+
+// 			span.label {
+// 				margin-left: -50%;
+// 				font-family: $sansSerif;
+// 				text-transform: uppercase;
+// 				letter-spacing: 2px;
+// 				opacity: 0.4;
+// 				font-size: 9px;
+// 				line-height: 13.5px;
+// 				// @include adjust-font-size-to(9px);
+// 				// @include adjust-leading-to(1);
+// 			}
+// 		}
+// 	}
+
+// 	.annotation-texts {
+// 		font-family: $sansSerif;
+// 		font-size: 11px;
+// 		line-height: 16.5px;
+// 		// @include adjust-font-size-to($s3);
+
+// 		// @include adjust-leading-to(1);
+// 		position: absolute;
+// 		top: 0;
+// 		left: 0;
+// 		width: 100%;
+// 		height: 100%;
+
+// 		.annotation {
+// 			position: absolute;
+// 			background: rgba(255, 255, 255, 0.75);
+// 			padding: 0.3em 0.5em;
+// 			}
+
+// 			span.name {
+// 				font-weight: bold;
+// 				display: block;
+// 			}
+// 	}
+
+// 	.annotation-guides {
+// 		position: absolute;
+// 		top: 0;
+// 		left: 0;
+// 		width: 100%;
+// 		height: 100%;
+
+// 		g.circles circle {
+// 			fill: rgba(0, 0, 0, 0.8);
+// 		}
+
+// 		g.lines line {
+// 			stroke: black;
+// 			stroke-opacity: 0.8;
+// 			shape-rendering: crispEdges;
+// 		}
+// 	}
+// }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 .igraphic-graphic.graphic {
 
@@ -26,232 +168,201 @@ $cool: #ebf3f7;
 
 		.chart {
 
-			img {
-				vertical-align: middle;
-			}
-
-			position: relative;
 			@include rhythm(0, 0, 0, 5);
 
-			.baselayer,
-			.labels,
-			.inner-title {
-				position: absolute;
-				top: 0;
-				left: 0;
-			}
+		// 	.baselayer,
+		// 	.labels,
+		// 	.inner-title {
+		// 		position: absolute;
+		// 		top: 0;
+		// 		left: 0;
+		// 	}
 
-			.inner-title {
+		// 	.inner-title {
 
-				@include rhythm(0, 1/4, 0, 0);
-				padding-left: 0.5em;
+		// 		@include rhythm(0, 1/4, 0, 0);
+		// 		padding-left: 0.5em;
 
-				span {
-					font-family: $sansSerifStrong;
-				}
-			}
+		// 		span {
+		// 			font-family: $sansSerifStrong;
+		// 		}
+		// 	}
 
-			.labels {
-				font-family: $sansSerif;
-				width: 100%;
-				height: 100%;
-				z-index: 2;
+		// 	.labels {
+		// 		font-family: $sansSerif;
+		// 		width: 100%;
+		// 		height: 100%;
+		// 		z-index: 2;
 
-				.label {
-					position: absolute;
-					@include adjust-leading-to(0);
+		// 		.label {
+		// 			position: absolute;
+		// 			@include adjust-leading-to(0);
 
-					&.rank1 span {
-						font-family: $sansSerif;
-						@include adjust-font-size-to(11px);
-						@include adjust-leading-to(1);
-						display: inline-block;
-						margin-top: -1em;
-						text-transform: uppercase;
-						letter-spacing: 2px;
-						opacity: 0.4;
-						color: black;
-					}
+		// 			&.rank1 span {
+		// 				font-family: $sansSerif;
+		// 				@include adjust-font-size-to(11px);
+		// 				@include adjust-leading-to(1);
+		// 				display: inline-block;
+		// 				margin-top: -1em;
+		// 				text-transform: uppercase;
+		// 				letter-spacing: 2px;
+		// 				opacity: 0.4;
+		// 				color: black;
+		// 			}
 
-					&.rank2 span {
-						@include adjust-font-size-to(9px);
-						@include adjust-leading-to(1);
-						display: inline-block;
-						margin-top: -1em;
-						opacity: 0.4;
-						margin-left: -50%;
-					}
+		// 			&.rank2 span {
+		// 				@include adjust-font-size-to(9px);
+		// 				@include adjust-leading-to(1);
+		// 				display: inline-block;
+		// 				margin-top: -1em;
+		// 				opacity: 0.4;
+		// 				margin-left: -50%;
+		// 			}
 
-					&.light span {
-						opacity: 0.2;
-					}
-				}
-			}
+		// 			&.light span {
+		// 				opacity: 0.2;
+		// 			}
+		// 		}
+		// 	}
 
-			svg {
-				vertical-align: middle;
-				position: relative;
-				z-index: 1;
-			}
+			// svg {
+			// 	vertical-align: bottom;
+			// 	position: relative;
+			// 	z-index: 1;
+			// }
 
-			svg text {
-				font-family: $sansSerif;
-			}
+			// svg text {
+			// 	font-family: $sansSerif;
+			// }
 
-			rect {
-				shape-rendering: crispEdges;
-			}
+			// rect {
+			// 	shape-rendering: crispEdges;
+			// }
 
-			circle {
-				stroke-width: 0.75px;
-			}
+			// // circle {
+			// // 	stroke-width: 0.75px;
+			// // }
 
-			.x.axis path,
-			.x.axis line {
-				fill: none;
-				stroke: $richBlack;
-				shape-rendering: crispEdges;
-			}
+			// .x.axis path,
+			// .x.axis line {
+			// 	fill: none;
+			// 	stroke: $richBlack;
+			// 	shape-rendering: crispEdges;
+			// }
 
-			.y.axis path.domain {
-				display: none;
-			}
+			// // .y.axis path.domain {
+			// // 	display: none;
+			// // }
 
-			.gridlines line {
-				stroke: white;
-				stroke-width: 1px;
-				shape-rendering: crispEdges;
-			}
+			// .gridlines line {
+			// 	stroke: white;
+			// 	stroke-width: 1px;
+			// 	shape-rendering: crispEdges;
+			// }
 
-			path.area.fill {
-				fill: $neutral;
-				stroke: none;
-				shape-rendering: crispEdges;
-			}
+			// path.area.fill {
+			// 	fill: $neutral;
+			// 	stroke: none;
+			// 	shape-rendering: crispEdges;
+			// }
 
-			path.area.stroke {
-				fill: none;
-				stroke: black;
-				shape-rendering: crispEdges;
-			}
+			// path.area.stroke {
+			// 	fill: none;
+			// 	stroke: black;
+			// 	shape-rendering: crispEdges;
+			// }
 
-			.axis text {
-				fill: $richBlack;
-				font-size: 10px;
-			}
+			// .axis text {
+			// 	fill: $richBlack;
+			// 	font-size: 10px;
+			// }
 
-			g.bar text.number {
-				fill: white;
-				text-shadow: 0 0 2px rgba(0,0,0,0.3), 0 0 2px rgba(0,0,0,0.3);
-			}
 
-			.annotationMarkers line {
+		// 	.annotationMarkers line {
 
-				&.dotted {
-					// stroke: $richBlack;
-					// stroke: red;
-					shape-rendering: crispEdges;
-					stroke-dasharray: 4,2;
-					opacity: 0.5;
-					stroke: black;
-				}
+		// 		&.dotted {
+		// 			// stroke: $richBlack;
+		// 			// stroke: red;
+		// 			shape-rendering: crispEdges;
+		// 			stroke-dasharray: 4,2;
+		// 			opacity: 0.5;
+		// 			stroke: black;
+		// 		}
 
-				&.solid {
-					stroke: black;
-					opacity: 0.5;
-				}
-			}
+		// 		&.solid {
+		// 			stroke: black;
+		// 			opacity: 0.5;
+		// 		}
+		// 	}
 
-			.annotations {
-				position: absolute;
-				top: 0;
-				left: 0;
-				width: 100%;
-				height: 100%;
-				z-index: 2;
+		// 	.annotations {
+		// 		position: absolute;
+		// 		top: 0;
+		// 		left: 0;
+		// 		width: 100%;
+		// 		height: 100%;
+		// 		z-index: 2;
 
-				.annotation {
-					position: absolute;
-					font-family: $sansSerif;
-					text-align: left;
-					padding: 0 0.2em;
-					margin-top: -0.5em;
-					@include adjust-leading-to(2/3);
-					opacity: 0.8;
+		// 		.annotation {
+		// 			position: absolute;
+		// 			font-family: $sansSerif;
+		// 			text-align: left;
+		// 			padding: 0 0.2em;
+		// 			margin-top: -0.5em;
+		// 			@include adjust-leading-to(2/3);
+		// 			opacity: 0.8;
 
-					&.goLeft {
-						-webkit-transform: translateX(-100%);
-						transform: translateX(-100%);
-						text-align: right;
-					}
+		// 			&.goLeft {
+		// 				-webkit-transform: translateX(-100%);
+		// 				transform: translateX(-100%);
+		// 				text-align: right;
+		// 			}
 
-					span {
-						display: inline-block;
-						@include adjust-font-size-to($s3, 1/2);
+		// 			span {
+		// 				display: inline-block;
+		// 				@include adjust-font-size-to($s3, 1/2);
 
-						&.date,
-						&.number {
-							font-weight: bold;
-						}
-					}
+		// 				&.date,
+		// 				&.number {
+		// 					font-weight: bold;
+		// 				}
+		// 			}
 
-					&.map {
-						padding: 0;
-						background: rgba(255, 255, 255, 0.5);
-						opacity: 0.8;
+		// 			&.map {
+		// 				padding: 0;
+		// 				background: rgba(255, 255, 255, 0.5);
+		// 				opacity: 0.8;
 
-						span {
-							@include adjust-font-size-to($s3p5, 2/3);
+		// 				span {
+		// 					@include adjust-font-size-to($s3p5, 2/3);
 
-							&.number {
-								font-family: $sansSerifStrong;
-								@include rhythm(0, 0, 1/8, 0);
-							}
-						}
+		// 					&.number {
+		// 						font-family: $sansSerifStrong;
+		// 						@include rhythm(0, 0, 1/8, 0);
+		// 					}
+		// 				}
 
-						&.left {
-							padding-left: 0.25em;
-						}
+		// 				&.left {
+		// 					padding-left: 0.25em;
+		// 				}
 
-						&.right {
-							padding-right: 0.25em;
-						}
-					}
+		// 				&.right {
+		// 					padding-right: 0.25em;
+		// 				}
+		// 			}
 
-				}
-			}
-		}
-
-		.small-multiples {
-			width: 100%;
-			overflow: hidden;
-
-			.chart {
-
-				@include rhythm(0, 0, 0, 1);
-
-				@include breakpoint(420px) {
-					@include rhythm(0, 0, 0, 0);
-					width: 49%;
-					float: left;
-
-					&:last-child {
-
-						float: right;
-					}
-				}
-
+		// 		}
 			}
 		}
 
 	}
 
 
-	.source-and-credit {
-		@include rhythm(4, 0, 0, 1);
-	}
-}
+// 	.source-and-credit {
+// 		@include rhythm(4, 0, 0, 1);
+// 	}
+// }
 
-.meter-modal-block.bg-modal--meter {
-	display: none;
-}
+// .meter-modal-block.bg-modal--meter {
+// 	display: none;
+// }

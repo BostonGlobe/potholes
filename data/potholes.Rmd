@@ -172,6 +172,8 @@ data <- potholes %>%
 csv <- data %>%
   select(LATITUDE,LONGITUDE,n)
 
+csv <- cbind(row = rownames(csv), csv)
+
 write.csv(csv, str_c('output/bestDayForDistrict', district, '_', unique(data$DATE.CLOSED.R), '.csv'), row.names = FALSE)
 
 map <- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=13)

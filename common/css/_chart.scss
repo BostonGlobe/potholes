@@ -1,0 +1,64 @@
+%chart {
+
+	position: relative;
+
+	svg {
+		vertical-align: bottom;
+		position: relative;
+		z-index: 1;
+	}
+
+	svg text {
+		font-family: $sansSerif;
+	}
+
+	.annotations {
+		position: absolute;
+		top: 0;
+		left: 0;
+		width: 100%;
+		height: 100%;
+		z-index: 2;
+
+		.annotation {
+			position: absolute;
+			font-family: $sansSerif;
+			text-align: left;
+			padding: 0 0.2em;
+			margin-top: -0.5em;
+			@include adjust-leading-to(2/3);
+			opacity: 0.8;
+
+			&.goLeft {
+				-webkit-transform: translateX(-100%);
+				transform: translateX(-100%);
+				text-align: right;
+			}
+
+			span {
+				display: inline-block;
+				@include adjust-font-size-to($s3, 1/2);
+
+				&.date,
+				&.number {
+					font-weight: bold;
+				}
+			}
+		}
+	}
+
+	.annotationMarkers line {
+
+		&.dotted {
+			shape-rendering: crispEdges;
+			stroke-dasharray: 4,2;
+			opacity: 0.5;
+			stroke: black;
+		}
+
+		&.solid {
+			stroke: black;
+			opacity: 0.5;
+		}
+	}
+}
