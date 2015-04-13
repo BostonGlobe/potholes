@@ -1,5 +1,7 @@
 # potholes
 
+[See here for data analysis.](http://bostonglobe.github.io/potholes/data/potholes.html)
+
 This project was generated with [generator-globeproject](https://github.com/BostonGlobe/generator-globeproject). Consult its [README](https://github.com/BostonGlobe/generator-globeproject) for more information.
 
 Please note: do not reproduce Boston Globe logos or fonts without written permission.
