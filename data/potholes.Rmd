@@ -21,7 +21,9 @@ library(ggmap)
 rawdata <- read.csv('../potholes.csv', strip.white=TRUE, stringsAsFactors=FALSE, row.names=NULL)
 ```
 
-A note on the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
+The following analysis was helpful during the making of my graphic [19,186 potholes in one year](http://www.bostonglobe.com/2015/04/13/potholes-one-year/q7tiUqqgDKcox6Cf6Af1HN/story.html) and [Andrew Ryan](https://twitter.com/GlobeAndrewRyan)'s story, [City touts pothole numbers, but what exactly qualifies?](http://www.bostonglobe.com/metro/2015/04/12/potholes-count-does-counting-them/eP0jqKHac7wz0lGIU0sgYM/story.html).
+
+On the format: each question is followed by the R code that generates the answer. This is also known as **reproducible research**, a practice that's slowly being adopted by newspapers (e.g. [538](https://github.com/fivethirtyeight/data), [The Upshot](https://github.com/theupshot)). From [wikipedia](http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research): "The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research."
 
 ****
 #### Before we begin: our data has `r I(nrow(rawdata))` rows and `r I(ncol(rawdata))` columns.
