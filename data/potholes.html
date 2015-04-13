@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+<head>
+
+<meta charset="utf-8">
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta name="generator" content="pandoc" />
+
+<meta name="author" content="Gabriel Florit" />
+
+
+<title>potholes</title>
+
+<script src="potholes_files/jquery-1.11.0/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="potholes_files/bootstrap-3.3.1/css/bootstrap.min.css" rel="stylesheet" />
+<script src="potholes_files/bootstrap-3.3.1/js/bootstrap.min.js"></script>
+<script src="potholes_files/bootstrap-3.3.1/shim/html5shiv.min.js"></script>
+<script src="potholes_files/bootstrap-3.3.1/shim/respond.min.js"></script>
+
+<style type="text/css">code{white-space: pre;}</style>
+<link rel="stylesheet"
+      href="potholes_files/highlight/default.css"
+      type="text/css" />
+<script src="potholes_files/highlight/highlight.js"></script>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs && document.readyState && document.readyState === "complete") {
+   window.setTimeout(function() {
+      hljs.initHighlighting();
+   }, 0);
+}
+</script>
+
+
+
+</head>
+
+<body>
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+</style>
+<div class="container-fluid main-container">
+
+
+<div id="header">
+<h1 class="title">potholes</h1>
+<h4 class="author"><em>Gabriel Florit</em></h4>
+</div>
+
+
+<p>A note on the format: each question is followed by the R code that generates the answer. This is also known as <strong>reproducible research</strong>, a practice that’s slowly being adopted by newspapers (e.g. <a href="https://github.com/fivethirtyeight/data">538</a>, <a href="https://github.com/theupshot">The Upshot</a>). From <a href="http://en.wikipedia.org/wiki/Reproducibility#Reproducible_research">wikipedia</a>: “The term reproducible research refers to the idea that the ultimate product of academic research is the paper along with the full computational environment used to produce the results in the paper such as the code, data, etc. that can be used to reproduce the results and create new work based on the research.”</p>
+<hr />
+<div id="before-we-begin-our-data-has-32011-rows-and-45-columns." class="section level4">
+<h4>Before we begin: our data has 32011 rows and 45 columns.</h4>
+<hr />
+</div>
+<div id="universal-assumptions-meaning-they-apply-to-all-following-graphics" class="section level2">
+<h2>Universal assumptions (meaning they apply to all following graphics)</h2>
+<ul>
+<li>There are two “date closed” columns, <strong>CLOSED_DT</strong> and <strong>Date.Closed</strong>. Not all rows have valid entries for both columns. Since we need one master “date closed” column, we’ll have to use <strong>CLOSED_DT</strong> unless blank, in which case we’ll use <strong>Date.Closed</strong>.</li>
+</ul>
+<hr />
+<div id="how-many-potholes-were-closed-per-year" class="section level4">
+<h4>How many potholes were closed per year?</h4>
+<pre class="r"><code>potholes %&gt;%
+  filter(!is.na(DATE.CLOSED.R)) %&gt;%
+  mutate(YEAR = year(DATE.CLOSED.R)) %&gt;%
+  group_by(YEAR) %&gt;%
+  summarise(POTHOLES = n()) %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">YEAR</th>
+<th align="right">POTHOLES</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">2013</td>
+<td align="right">12825</td>
+</tr>
+<tr class="even">
+<td align="right">2014</td>
+<td align="right">19186</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+<div id="what-does-this-look-like-over-time" class="section level4">
+<h4>What does this look like over time?</h4>
+<pre class="r"><code>data &lt;- potholes %&gt;%
+  filter(!is.na(DATE.CLOSED.R)) %&gt;%
+  arrange(DATE.CLOSED.R) %&gt;%
+  group_by(DATE.CLOSED.R) %&gt;%
+  summarise(closures = n())
+
+write.csv(data, file=&#39;output/potholeClosuresPerDay.csv&#39;, row.names=FALSE)
+
+ggplot(data, aes(DATE.CLOSED.R, closures)) +
+  geom_bar(stat=&#39;identity&#39;) +
+  ggtitle(&#39;Daily pothole tally&#39;) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-5-1.png" title="" alt="" width="910px" /></p>
+<hr />
+</div>
+<div id="which-districts-are-contributing-to-the-increase-in-pothole-closures" class="section level4">
+<h4>Which districts are contributing to the increase in pothole closures?</h4>
+<pre class="r"><code>data &lt;- rbind(
+  (potholes %&gt;%
+    filter(pwd_district == &#39;2&#39;) %&gt;%
+    mutate(district = &#39;District 2&#39;)),
+  (potholes %&gt;%
+    filter(pwd_district != &#39;2&#39;) %&gt;%
+    mutate(district = &#39;Rest&#39;))) %&gt;%
+  mutate(YEAR = year(DATE.CLOSED.R)) %&gt;%
+  filter(!is.na(YEAR)) %&gt;%
+  group_by(district, YEAR) %&gt;%
+  tally() %&gt;%
+  summarise(increase = diff(n))
+
+write.csv(data, &#39;output/yearlyIncreaseByDistrict.csv&#39;, row.names = FALSE)
+
+ggplot(data, aes(x=district, y=increase, fill=district)) +
+  geom_bar(stat=&#39;identity&#39;) +
+  geom_text(aes(label=increase), hjust=1) +
+  ylab(&#39;potholes fixed&#39;) +
+  xlab(NULL) +
+  theme(
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  coord_flip() +
+  ggtitle(&#39;2014 increase over 2013, by district&#39;)</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-6-1.png" title="" alt="" width="910px" /></p>
+<hr />
+</div>
+<div id="lets-look-at-district-2-potholes-filled-per-week." class="section level4">
+<h4>Let’s look at district 2 potholes filled per week.</h4>
+<pre class="r"><code>data &lt;- potholes %&gt;%
+  filter(
+    !is.na(DATE.CLOSED.R),
+    pwd_district == &#39;2&#39;
+  ) %&gt;%
+  transmute(WEEK = floor_date(DATE.CLOSED.R, &#39;week&#39;)) %&gt;%
+  arrange(WEEK) %&gt;%
+  group_by(WEEK) %&gt;%
+  tally()
+
+write.csv(data, &#39;output/weeklyClosuresForDistrict2.csv&#39;, row.names = FALSE)
+
+ggplot(data, aes(WEEK, n)) +
+  geom_bar(stat=&#39;identity&#39;) +
+  ggtitle(&#39;Weekly pothole closures for district 2&#39;) +
+  theme(
+    axis.title.x = element_blank(),
+    axis.title.y = element_blank()
+  )</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-7-1.png" title="" alt="" width="910px" /></p>
+<hr />
+</div>
+<div id="lets-look-at-district-2s-top-day-of-filling-potholes." class="section level4">
+<h4>Let’s look at District 2’s top day of filling potholes.</h4>
+</div>
+</div>
+<div id="graphic-specific-assumptions" class="section level2">
+<h2>Graphic-specific assumptions</h2>
+<ul>
+<li>We will ignore potholes located at (-71.0587,42.3594), which is City Hall.</li>
+</ul>
+<pre class="r"><code>district &lt;- 2
+
+data &lt;- potholes %&gt;%
+  filter(
+    !is.na(DATE.CLOSED.R),
+    pwd_district == district,
+    LONGITUDE != -71.0587,
+    LATITUDE != 42.3594
+  ) %&gt;%
+  arrange(DATE.CLOSED.R) %&gt;%
+  group_by(DATE.CLOSED.R, pwd_district) %&gt;%
+  tally() %&gt;%
+  group_by(pwd_district) %&gt;%
+  slice(which.max(n)) %&gt;%
+  inner_join(potholes, by=c(&#39;DATE.CLOSED.R&#39;, &#39;pwd_district&#39;)) %&gt;%
+  filter(
+    LONGITUDE != -71.0587,
+    LATITUDE != 42.3594
+  ) %&gt;%
+  select(
+    LATITUDE,
+    LONGITUDE,
+    DATE.CLOSED.R
+  ) %&gt;%
+  group_by(LATITUDE, LONGITUDE, DATE.CLOSED.R) %&gt;%
+  tally() %&gt;%
+  ungroup() %&gt;%
+  arrange(desc(n))
+
+csv &lt;- data %&gt;%
+  select(LATITUDE,LONGITUDE,n)
+
+write.csv(csv, str_c(&#39;output/bestDayForDistrict&#39;, district, &#39;_&#39;, unique(data$DATE.CLOSED.R), &#39;.csv&#39;), row.names = FALSE)
+
+map &lt;- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=13)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  scale_size_area(max_size=20) +
+  ggtitle(str_c(&#39;District &#39;, district, &#39; fixed &#39;, sum(data$n), &#39; potholes in &#39;, nrow(data) , &#39; locations on &#39;, unique(data$DATE.CLOSED.R)))</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-8-1.jpeg" title="" alt="" width="910px" /></p>
+<hr />
+<div id="show-me-clusters-of-15-or-more-potholes-fixed-on-the-same-day-for-all-districts-for-2014." class="section level4">
+<h4>Show me clusters of 15 or more potholes fixed on the same day for all districts for 2014.</h4>
+</div>
+</div>
+<div id="graphic-specific-assumptions-1" class="section level2">
+<h2>Graphic-specific assumptions</h2>
+<ul>
+<li>We will ignore potholes located at (-71.0587,42.3594), which is City Hall.</li>
+</ul>
+<pre class="r"><code>data &lt;- rbind(
+  (potholes %&gt;%
+    filter(pwd_district %in% c(&#39;2&#39;, &#39;3&#39;)) %&gt;%
+    mutate(district = pwd_district)),
+  (potholes %&gt;%
+    filter(!(pwd_district %in% c(&#39;2&#39;, &#39;3&#39;))) %&gt;%
+    mutate(district = &#39;Rest&#39;))) %&gt;%
+  select(-pwd_district) %&gt;%
+  filter(
+    LATITUDE!=42.3594, LONGITUDE!=-71.0587,
+    year(DATE.CLOSED.R) == 2014
+  ) %&gt;%
+  group_by(DATE.CLOSED.R, LONGITUDE, LATITUDE, district) %&gt;%
+  tally() %&gt;%
+  ungroup() %&gt;%
+  filter(n &gt;= 15) %&gt;%
+  select(-DATE.CLOSED.R)
+
+write.csv(data, &#39;output/clustersIn2014.csv&#39;, row.names = FALSE)
+
+map &lt;- get_map(location=c(min(data$LONGITUDE), min(data$LATITUDE), max(data$LONGITUDE), max(data$LATITUDE)), zoom=12)
+ggmap(map) +
+  geom_point(aes(x=LONGITUDE, y=LATITUDE, size=n, alpha=0.05,color=district), data=data) +
+  geom_point(shape=1, aes(x=LONGITUDE, y=LATITUDE, size=n), data=data) +
+  ggtitle(str_c(nrow(data), &#39; single-day clusters&#39;)) +
+  scale_size_area(max_size=15)</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-9-1.jpeg" title="" alt="" width="910px" /></p>
+<pre class="r"><code>clusters &lt;- data %&gt;%
+  group_by(district) %&gt;%
+  summarise(count = n())
+
+ggplot(clusters, aes(x=district, y=count, fill=district)) +
+  geom_bar(stat=&#39;identity&#39;) +
+  geom_text(aes(label=count), hjust=1) +
+  theme(
+    axis.ticks.y = element_blank(),
+    axis.text.y = element_blank()
+  ) +
+  coord_flip() +
+  ggtitle(str_c(nrow(data), &#39; single-day clusters&#39;))</code></pre>
+<p><img src="potholes_files/figure-html/unnamed-chunk-10-1.png" title="" alt="" width="910px" /></p>
+<hr />
+<div id="in-the-above-map-what-district-fixed-the-cluster-near-chinatown-and-did-they-took-care-of-the-same-location-previously" class="section level4">
+<h4>In the above map, what district fixed the cluster near Chinatown, and did they took care of the same location previously?</h4>
+<pre class="r"><code>potholes %&gt;%
+  filter(LATITUDE == 42.3520, LONGITUDE == -71.0615) %&gt;%
+  group_by(LATITUDE, LONGITUDE, pwd_district, DATE.CLOSED.R) %&gt;%
+  tally() %&gt;%
+  knitr::kable()</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">LATITUDE</th>
+<th align="right">LONGITUDE</th>
+<th align="left">pwd_district</th>
+<th align="left">DATE.CLOSED.R</th>
+<th align="right">n</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">42.352</td>
+<td align="right">-71.0615</td>
+<td align="left">1C</td>
+<td align="left">2013-07-05</td>
+<td align="right">11</td>
+</tr>
+<tr class="even">
+<td align="right">42.352</td>
+<td align="right">-71.0615</td>
+<td align="left">1C</td>
+<td align="left">2014-07-05</td>
+<td align="right">17</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+$(document).ready(function () {
+  $('tr.header').parent('thead').parent('table').addClass('table table-condensed');
+});
+
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
